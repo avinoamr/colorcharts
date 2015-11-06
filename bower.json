@@ -1,0 +1,27 @@
+{
+  "name": "colorcharts",
+  "homepage": "https://github.com/avinoamr/colorcharts",
+  "authors": [
+    "Roi Avinoam <avinoamr@gmail.com>"
+  ],
+  "description": "Catalog of beautiful d3 charts",
+  "main": "colorcharts.js",
+  "moduleType": [],
+  "keywords": [
+    "color",
+    "charts",
+    "d3"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "example",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~3.5.6"
+  },
+}
