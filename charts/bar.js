@@ -1,7 +1,14 @@
 (function() {
     var color = window.color;
     color.bar = function ( el ) {
-        return new Bar( el )
+        var bar = d3.select( el ).data()[ 0 ];
+
+        if ( !bar ) {
+            var bar = new Bar( el );
+            d3.select( el ).data( [ bar ] );
+        }
+        
+        return bar;
     }
 
     function Bar( el ) {
@@ -38,11 +45,14 @@
 
     function draw( that ) {
         var el = that._el;
-        el.innerHTML = "<svg></svg>";
         var svg = d3.select( el )
-            .select( "svg" );
+            .selectAll( "svg" )
+            .data( [ that ] );
 
-        svg.style({ height: "100%", width: "100%" });
+        svg.enter()
+            .append( "svg" )
+            .style( "height", "100%" )
+            .style( "width", "100%" );
 
         var height = svg.node().offsetHeight;
         var width = svg.node().offsetWidth;
@@ -108,8 +118,9 @@
 
         // start drawing
         var groups = svg.selectAll( "g" )
-            .data( data )
-            .enter().append( "g" )
+            .data( data, function ( d ) { return d.key } );
+        groups.exit().remove();
+        groups.enter().append( "g" )
             .attr( "data-group", function ( d ) {
                 return d.key;
             })
@@ -119,8 +130,9 @@
         })
 
         var bars = groups.selectAll( "g" )
-            .data(function ( d ) { return d.values })
-            .enter().append( "g" )
+            .data(function ( d ) { return d.values });
+        bars.exit().remove();
+        bars.enter().append( "g" )
             .attr( "data-bar", function ( d ) {
                 return d.key;
             });
@@ -130,8 +142,9 @@
         })
 
         var rects = bars.selectAll( "rect" )
-            .data( function ( d ) { return d.values } )
-            .enter().append( "rect" )
+            .data( function ( d ) { return d.values } );
+        rects.exit().remove();
+        rects.enter().append( "rect" )
 
         rects
             .attr( "y", function ( d ) {
