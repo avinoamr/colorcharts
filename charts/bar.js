@@ -61,14 +61,14 @@
             .entries( that._data );
 
         // extract the colors and bars from the data tree
-        var colors = color.tree.dfs()
-            .filter(function ( d, i, j ) { return j == 3 })
-            .values( function ( d ) { return d.values || d })
+        var bars = color.tree.dfs()
+            .filter( function ( d, i, j ) { return j == 2 } )
+            .values( function ( d ) { return d.values || d } )
             .entries( data );
 
-        var bars = color.tree.dfs()
-            .filter(function ( d, i, j ) { return j == 2 })
-            .values( function ( d ) { return d.values || d })
+        var colors = color.tree.dfs()
+            .filter( function ( d, i, j ) { return j == 3 } )
+            .values( function ( d ) { return d.values || d } )
             .entries( data );
 
         // stack the colors
