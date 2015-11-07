@@ -138,13 +138,6 @@
             })
     }
 
-    function extend( target, obj ) {
-        Object.keys( obj || {} ).forEach( function ( key ) {
-            target[ key ] = obj[ key ];
-        });
-        return target;
-    }
-
     function getset ( key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
