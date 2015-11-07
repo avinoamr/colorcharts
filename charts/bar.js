@@ -60,8 +60,16 @@
             })
             .entries( that._data );
 
-        var bars = color.depth( 2 ).key( "values" )( data );
-        var colors = color.depth( 3 ).key( "values" )( data );
+        // extract the colors and bars from the data tree
+        var colors = color.tree.dfs()
+            .filter(function ( d, i, j ) { return j == 3 })
+            .values( function ( d ) { return d.values || d })
+            .entries( data );
+
+        var bars = color.tree.dfs()
+            .filter(function ( d, i, j ) { return j == 2 })
+            .values( function ( d ) { return d.values || d })
+            .entries( data );
 
         // stack the colors
         bars.map( function ( data ) {
