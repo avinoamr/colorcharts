@@ -89,7 +89,7 @@
 
         var allc = colors.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
-            .domain( [ d3.min( allc ), d3.max( allc ) ] )
+            .domain( d3.extent( allc ) )
             .range( [ that._palette.from, that._palette.to ] );
 
         var cord = d3.scale.ordinal()
