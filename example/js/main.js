@@ -1,4 +1,4 @@
-var b = color.bar( document.querySelector( "main" ) )
+var b = color.bar( document.querySelector( "#chart" ) )
     .data([
         { movie: "American Beauty", studio: "Paramount", genre: "Drama", count: 40, number: 1 },
         { movie: "Star Wars", studio: "Paramount", genre: "Sci-Fi", count: 39, number: 5 },
@@ -13,21 +13,21 @@ var b = color.bar( document.querySelector( "main" ) )
 window.onload = function () {
     var gui = new dat.GUI();
     var x = "movie", x1 = "", y = "count", color = "", size = "",
-        background = "#F3F3F3";
+        background = "#F3F3F3", palette = "set3";
 
     var obj = {
         set x ( _x ) {
-            b.x( x = _x ).draw();
+            b.x( x = _x )
         },
         get x () { return x },
 
         set x1 ( _x ) {
-            b.x1( x1 = _x ).draw();
+            b.x1( x1 = _x )
         },
         get x1 () { return x1 },
 
         set y ( _y ) {
-            b.y( y = _y ).draw()
+            b.y( y = _y )
         },
         get y () { return y },
 
@@ -37,26 +37,28 @@ window.onload = function () {
                 options = { from: "#edf8fb", to: "#006d2c" };
             }
 
-            b.color( color = _color, options ).draw();
+            b.color( color = _color );
         },
         get color () { return color },
 
-        set size ( _size ) {
-            b.size( size = _size ).draw();
+        set palette ( _palette ) {
+            b.palette( window.color.palettes[ palette = _palette ] )
         },
-        get size () { return size },
+
+        get palette () { return palette },
 
         set background ( _background ) {
             var main = document.querySelector( "main" );
             main.style.background = background = _background;
         },
-        get background () { return background }
+        get background () { return background },
     }
 
     gui.add( obj, "x", { Movie: "movie", Genre: "genre", Studio: "studio" } )
     gui.add( obj, "x1", { None: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
     gui.add( obj, "y", { Count: "count", Number: "number" } )
     gui.add( obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio", Count: "count", Number: "number" } )
-    gui.addColor( obj, "background" )
-    obj.background = background;
+    gui.add( obj, "palette", { Paired: "paired", Set3: "set3", Greens: "greens" } )
+    // gui.addColor( obj, "background" )
+    obj.background = "rgba(255,255,255,.1)";
 }
