@@ -1,4 +1,5 @@
-var b = color.bar( document.querySelector( "#chart" ) )
+var b = color( document.querySelector( "#chart" ) )
+    .bar()
     .data([
         { movie: "American Beauty", studio: "Paramount", genre: "Drama", count: 40, number: 1 },
         { movie: "Star Wars", studio: "Paramount", genre: "Sci-Fi", count: 39, number: 5 },

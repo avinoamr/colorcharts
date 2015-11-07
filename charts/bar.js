@@ -1,6 +1,6 @@
 (function() {
-    window.color || ( window.color = {} ) 
-    window.color.bar = function ( el ) {
+    var color = window.color;
+    color.bar = function ( el ) {
         return new Bar( el )
     }
 
@@ -59,33 +59,35 @@
                 }, { y: 0 } )
             })
             .entries( that._data );
-        
-        // build the scales
-        console.log( data )
-        var allx0 = [], allx1 = [], ally = [], allc = [];
-        data.forEach( function ( d ) {
-            allx0.push( d.key );
-            d.values.forEach( function ( d1 ) {
-                allx1.push( d1.key );
-                d1.values.forEach( function ( d2 ) {
-                    ally.push( d2.values.y + d2.values.y0 );
-                    allc.push( d2.key )
-                })
+
+        var bars = color.depth( 2 ).key( "values" )( data );
+        var colors = color.depth( 3 ).key( "values" )( data );
+
+        // stack the colors
+        bars.map( function ( data ) {
+            return data.values.map( function ( d ) { 
+                return [ d.values ] 
             })
         })
-
+        .forEach( d3.layout.stack() );
+        
+        // build the scales
+        var allx0 = data.map( function ( d ) { return d.key });
         var x0 = d3.scale.ordinal()
             .domain( allx0 )
             .rangeRoundBands([ 0, width ], .1 );
 
+        var allx1 = bars.map( function ( d ) { return d.key })
         var x1 = d3.scale.ordinal()
             .domain( allx1 )
             .rangeRoundBands( [ 0, x0.rangeBand() ], .01 )
 
+        var ally = colors.map( function ( d ) { return d.values.y + d.values.y0 } );
         var y = d3.scale.linear()
             .domain([ 0, d3.max( ally ) ])
             .rangeRound([ 0, height ] );
 
+        var allc = colors.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
             .domain( [ d3.min( allc ), d3.max( allc ) ] )
             .range( [ that._palette.from, that._palette.to ] );
