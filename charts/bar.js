@@ -54,8 +54,6 @@
             .style( "height", "100%" )
             .style( "width", "100%" );
 
-        var height = svg.node().offsetHeight;
-        var width = svg.node().offsetWidth;
         var _x0 = that._x0, _x1 = that._x1, _c = that._color, _y = that._y;
 
         // build the groups tree
@@ -93,7 +91,7 @@
         var allx0 = data.map( function ( d ) { return d.key });
         var x0 = d3.scale.ordinal()
             .domain( allx0 )
-            .rangeRoundBands([ 0, width ], .1 );
+            .rangeRoundBands([ 0, svg.node().offsetWidth ], .1 );
 
         var allx1 = bars.map( function ( d ) { return d.key })
         var x1 = d3.scale.ordinal()
@@ -103,7 +101,7 @@
         var ally = colors.map( function ( d ) { return d.values.y + d.values.y0 } );
         var y = d3.scale.linear()
             .domain([ 0, d3.max( ally ) ])
-            .rangeRound([ 0, height ] );
+            .rangeRound([ 0, svg.node().offsetHeight ] );
 
         var allc = colors.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
@@ -128,10 +126,15 @@
                 return "translate(" + x0( d.key ) + ",0)";
             })
 
-        groups.transition()
+        groups
+            .call( xlabels( x0, y ) )
+            .transition()
             .attr( "transform", function ( d ) {
-                return "translate(" + x0( d.key ) + ",0)";
+                var x = x0( d.key );
+                var y = 0;
+                return "translate(" + x + "," + y + ")";
             })
+            
 
         var bars = groups.selectAll( "g[data-bar]" )
             .data( function ( d ) { return d.values } );
@@ -141,7 +144,9 @@
                 return d.key;
             });
 
-        bars.transition()
+        bars
+            .call( xlabels( x1, y ) )
+            .transition()
             .attr( "transform", function ( d ) {
                 return "translate(" + x1( d.key ) + ",0)";
             })
@@ -160,7 +165,7 @@
         rects
             .transition()
             .attr( "y", function ( d ) {
-                return height - y( d.values.y ) - y( d.values.y0 )
+                return y.range()[ 1 ] - y( d.values.y ) - y( d.values.y0 )
             })
             .attr( "height", function ( d ) {
                 return y( d.values.y );
@@ -171,6 +176,38 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
+    }
+
+    function xlabels ( x, y ) {
+        var h = y.range()[ 1 ] - y.range()[ 0 ];
+        var w = x.rangeBand() / 2;
+        return function ( groups ) {
+            var labels = groups.selectAll( "text" )
+                .data( function ( d ) { return [ d ] } )
+
+            labels.enter().append( "text" );
+            labels.exit().remove();
+            labels
+                .text( function ( d ) { return d.key })
+                .style( "font", "12px roboto_condensedregular" )
+                .style( "fill", "white" )
+                .attr( "text-anchor", "middle" )
+                .attr( "transform", function ( d ) {
+                    return "translate(" + w + "," + ( h - 3 ) + ")"
+                })
+
+            // side-effect: modify the y-range to leave space 
+            var maxh = d3.max( labels, function ( text ) {
+                return text[ 0 ].offsetHeight;
+            })
+
+            maxh += maxh ? 4 : 0;
+
+            y.rangeRound([ 
+                y.range()[ 0 ] + maxh, 
+                y.range()[ 1 ] 
+            ])
+        }
     }
 
     function getset ( key ) {
