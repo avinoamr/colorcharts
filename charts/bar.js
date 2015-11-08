@@ -117,40 +117,43 @@
         var c = that._palette.from && that._palette.to ? clin : cord;
 
         // start drawing
+        var keyfn = function ( d ) { return d.key };
         var groups = svg.selectAll( "g[data-group]" )
-            .data( data, function ( d ) { return d.key } );
+            .data( data, keyfn );
         groups.exit().remove();
         groups.enter().append( "g" )
             .attr( "data-group", function ( d ) {
                 return d.key;
             })
 
-        groups.attr( "transform", function ( d ) {
-            return "translate(" + x0( d.key ) + ",0)";
-        })
+        groups.transition()
+            .attr( "transform", function ( d ) {
+                return "translate(" + x0( d.key ) + ",0)";
+            })
 
         var bars = groups.selectAll( "g[data-bar]" )
-            .data( function ( d ) { return d.values } );
+            .data( function ( d ) { return d.values }, keyfn );
         bars.exit().remove();
         bars.enter().append( "g" )
             .attr( "data-bar", function ( d ) {
                 return d.key;
             });
 
-        bars.attr( "transform", function ( d ) {
-            return "translate(" + x1( d.key ) + ",0)";
-        })
+        bars.transition()
+            .attr( "transform", function ( d ) {
+                return "translate(" + x1( d.key ) + ",0)";
+            })
 
         var rects = bars.selectAll( "rect[data-color]" )
-            .data( function ( d ) { return d.values } );
+            .data( function ( d ) { return d.values }, keyfn );
         rects.exit().remove();
         rects.enter().append( "rect" )
             .attr( "data-color", function ( d ) {
                 return d.key;
             })
 
-
         rects
+            .transition()
             .attr( "y", function ( d ) {
                 return height - y( d.values.y ) - y( d.values.y0 )
             })
