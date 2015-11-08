@@ -1,3 +1,69 @@
+(function () {
+    window.color = function color( element ) {
+        return {
+            bar: function () {
+                return color.bar( element )
+            }
+        }
+    }
+})();
+(function () {
+    var color = window.color;
+    color.tree = {};
+
+    color.tree.dfs = function () {
+        var filter = function ( d ) { return d };
+        var values = function ( d ) { return d };
+
+        var fn = function ( data ) {
+            return fn.entries( data )
+        }
+
+        fn.entries = function ( data ) {
+            return dfs( data, 0, 0 )
+        }
+
+        fn.filter = function ( _filter ) {
+            filter = _filter;
+            return this;
+        }
+
+        fn.values = function ( _values ) {
+            values = _values;
+            return this;
+        }
+
+        return fn;
+
+        function dfs( data, i, depth ) {
+            var results = [];
+            if ( filter( data, i, depth ) ) {
+                results.push( data );
+            }
+
+            data = values( data, i, depth );
+
+            if ( !Array.isArray( data ) ) {
+                return results;
+            }
+
+            return data.reduce( function ( results, d, i ) {
+                return results.concat( dfs( d, i, depth + 1 ) );
+            }, results )
+        }
+    }
+})();
+(function () {
+    var color = window.color;
+    color.palettes = {
+
+        // 
+        "paired": [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99", "#b15928" ],
+        "default": [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f" ],
+        
+        "greens": { from: "#c7e9c0", to: "#00441b" }
+    }
+})();
 (function() {
     var color = window.color;
     color.bar = function ( el ) {
