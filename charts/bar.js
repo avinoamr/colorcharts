@@ -161,6 +161,10 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
+            .each( function () {
+                this.addEventListener( "mouseenter", mouseEnter )
+                this.addEventListener( "mouseleave", mouseLeave )
+            })
 
         rects
             .transition()
@@ -176,6 +180,18 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
+    }
+
+    function mouseEnter ( ev ) {
+        d3.select( this )
+            .transition()
+            .style( "opacity", .6 )
+    }
+
+    function mouseLeave ( ev ) {
+        d3.select( this )
+            .transition()
+            .style( "opacity", 1 )
     }
 
     function xlabels ( x, y ) {
@@ -196,13 +212,12 @@
                     return "translate(" + w + "," + ( h - 3 ) + ")"
                 })
 
-            // side-effect: modify the y-range to leave space 
+            // side-effect: modify the y-range to leave space for the label
             var maxh = d3.max( labels, function ( text ) {
                 return text[ 0 ].offsetHeight;
             })
 
             maxh += maxh ? 4 : 0;
-
             y.rangeRound([ 
                 y.range()[ 0 ] + maxh, 
                 y.range()[ 1 ] 
