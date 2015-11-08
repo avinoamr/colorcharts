@@ -3,7 +3,7 @@
     color.bar = function ( el ) {
         var bar = d3.select( el ).data()[ 0 ];
 
-        if ( !bar ) {
+        if ( !( bar instanceof Bar ) ) {
             var bar = new Bar( el );
             d3.select( el ).data( [ bar ] );
         }
@@ -15,13 +15,13 @@
         this._el = el;
     }
 
-    Bar.prototype._x0 = "";
+    Bar.prototype._x1 = "";
     Bar.prototype._color = "";
     Bar.prototype._palette = window.color.palettes.default;
 
     Bar.prototype.data = autodraw( getset( "_data" ) );
     Bar.prototype.x0 = autodraw( getset( "_x0" ) );
-    Bar.prototype.x1 = autodraw( getset( "_x1", "" ) );
+    Bar.prototype.x1 = autodraw( getset( "_x1" ) );
     Bar.prototype.x = alias( "x0" );
     Bar.prototype.y = autodraw( getset( "_y" ) );
     Bar.prototype.color = autodraw( getset( "_color" ) );
