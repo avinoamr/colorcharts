@@ -55,6 +55,8 @@ window.onload = function () {
         get background () { return background },
     }
 
+    gui.close()
+
     gui.add( obj, "x", { Movie: "movie", Genre: "genre", Studio: "studio" } )
     gui.add( obj, "x1", { None: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
     gui.add( obj, "y", { Count: "count", Number: "number" } )
