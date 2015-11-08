@@ -124,9 +124,9 @@
             .attr( "data-group", function ( d ) {
                 return d.key;
             })
-            // .attr( "transform", function ( d ) {
-            //     return "translate(" + x0( d.key ) + ",0)";
-            // })
+            .attr( "transform", function ( d ) {
+                return "translate(" + x0( d.key ) + ",0)";
+            })
 
         groups.transition()
             .attr( "transform", function ( d ) {
