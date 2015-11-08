@@ -117,7 +117,7 @@
         var c = that._palette.from && that._palette.to ? clin : cord;
 
         // start drawing
-        var groups = svg.selectAll( "g" )
+        var groups = svg.selectAll( "g[data-group]" )
             .data( data, function ( d ) { return d.key } );
         groups.exit().remove();
         groups.enter().append( "g" )
@@ -129,8 +129,8 @@
             return "translate(" + x0( d.key ) + ",0)";
         })
 
-        var bars = groups.selectAll( "g" )
-            .data(function ( d ) { return d.values });
+        var bars = groups.selectAll( "g[data-bar]" )
+            .data( function ( d ) { return d.values } );
         bars.exit().remove();
         bars.enter().append( "g" )
             .attr( "data-bar", function ( d ) {
@@ -141,10 +141,14 @@
             return "translate(" + x1( d.key ) + ",0)";
         })
 
-        var rects = bars.selectAll( "rect" )
+        var rects = bars.selectAll( "rect[data-color]" )
             .data( function ( d ) { return d.values } );
         rects.exit().remove();
         rects.enter().append( "rect" )
+            .attr( "data-color", function ( d ) {
+                return d.key;
+            })
+
 
         rects
             .attr( "y", function ( d ) {
