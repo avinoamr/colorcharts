@@ -1,67 +1,104 @@
-var b = color( document.querySelector( "#chart" ) )
-    .bar()
-    .data([
-        { movie: "American Beauty", studio: "Paramount", genre: "Drama", count: 40, number: 1 },
-        { movie: "Star Wars", studio: "Paramount", genre: "Sci-Fi", count: 39, number: 5 },
-        { movie: "Blade Runner", studio: "Paramount", genre: "Sci-Fi", count: 27, number: 8 },
-        { movie: "Pulp Fiction", studio: "Universal", genre: "Drama", count: 13, number: 2 },
-        { movie: "Men in Black", studio: "Universal", genre: "Sci-Fi", count: 5, number: 4 },
-    ])
-    .x( "movie" )
-    .y( "count" )
-    .draw();
-
 window.onload = function () {
+    setTimeout( generateCode )
+    getBar()
+        .x( "movie" )
+        .y( "count" )
+        .data([
+            { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1 },
+            { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 39, "number": 5 },
+            { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8 },
+            { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
+            { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
+        ]);
+
+    var js = ace.edit( "js" )
+    js.setTheme( "ace/theme/monokai" );
+    js.getSession().setMode( "ace/mode/javascript" );
+
+    // run
+    document.querySelector( "#run" )
+        .addEventListener( "click", run );
+
+    // build the gui controls
     var gui = new dat.GUI();
-    var x = "movie", x1 = "", y = "count", color = "", size = "",
-        background = "#F3F3F3", palette = "set3";
-
     var obj = {
-        set x ( _x ) {
-            b.x( x = _x )
-        },
-        get x () { return x },
+        set x ( v ) { getBar().x( v ); generateCode() },
+        get x () { return getBar().x() },
 
-        set x1 ( _x ) {
-            b.x1( x1 = _x )
-        },
-        get x1 () { return x1 },
+        set x1 ( v ) { getBar().x1( v ); generateCode() },
+        get x1 () { return getBar().x1() || "" },
 
-        set y ( _y ) {
-            b.y( y = _y )
-        },
-        get y () { return y },
+        set y ( v ) { getBar().y( v ); generateCode() },
+        get y () { return getBar().y() },
 
-        set color ( _color ) {
-            var options = { colors: [ "red", "green", "blue", "orange", "yellow" ] };
-            if ( _color == "number" || _color == "count" ) {
-                options = { from: "#edf8fb", to: "#006d2c" };
-            }
+        set color ( v ) { getBar().color( v ); generateCode() },
+        get color () { return getBar().color() || "" },
 
-            b.color( color = _color );
-        },
-        get color () { return color },
-
-        set palette ( _palette ) {
-            b.palette( window.color.palettes[ palette = _palette ] )
+        set palette ( v ) {
+            getBar().palette( window.color.palettes[ v ] );
+            generateCode()
         },
 
-        get palette () { return palette },
-
-        set background ( _background ) {
-            var main = document.querySelector( "main" );
-            main.style.background = background = _background;
+        get palette () { 
+            var palette = getBar().palette();
+            return Object.keys( window.color.palettes )
+                .filter( function ( key ) {
+                    return palette == window.color.palettes[ key ];
+                })[ 0 ]
         },
-        get background () { return background },
     }
 
-    gui.close()
+    gui.close(); // auto-close
 
     gui.add( obj, "x", { Movie: "movie", Genre: "genre", Studio: "studio" } )
     gui.add( obj, "x1", { None: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
     gui.add( obj, "y", { Count: "count", Number: "number" } )
     gui.add( obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio", Count: "count", Number: "number" } )
-    gui.add( obj, "palette", { Paired: "paired", Set3: "set3", Greens: "greens" } )
-    // gui.addColor( obj, "background" )
-    obj.background = "rgba(255,255,255,.1)";
+    gui.add( obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
+
+    function getBar() {
+        return window.color( document.querySelector( "#chart" ) )
+            .bar()
+    }
+
+    function run() {
+        var code = "var color = window.color;\n" + js.getValue();
+        eval( code );
+    }
+
+    function generateCode () {
+        var bar = getBar();
+        var code = Object.keys( obj )
+            .filter( function ( key ) {
+                return !!obj[ key ]; // remove defaults
+            })
+            .filter( function ( key ) {
+                return key != "palette" || bar[ key ]() != window.color.palettes.default;
+            })
+            .reduce( function ( code, key ) {
+                var v = bar[ key ]();
+                v = typeof v != "string" || typeof v != "number"
+                    ? JSON.stringify( v )
+                    : '"' + v + '"';
+
+                code.push( '.' + key + '(' + v + ')' );
+                return code;
+            }, [ ".bar()" ] );
+
+        var data = bar.data()
+            .map( function ( d ) { 
+                return "\t" + JSON.stringify( d ) + "," 
+            });
+
+        code = []
+            .concat( code )
+            .concat( '.data([', data, '])' )
+            .map( function ( l ) { return "\t" + l } );
+
+        code = [ 'color(document.querySelector("#chart"))' ]
+            .concat( code )
+            .join( "\n" );
+
+        js.setValue( code, -1 );
+    }
 }

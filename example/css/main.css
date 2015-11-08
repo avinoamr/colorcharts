@@ -98,6 +98,7 @@ textarea {
 body {
     background: url(../img/concrete_wall.png);
     color: #fffff8;
+    font-family: "roboto_condensedregular", sans-serif;
 }
 
 main {
@@ -105,6 +106,7 @@ main {
     height: 300px;
     padding-top: 30px;
     padding-bottom: 30px;
+    background: rgba(255,255,255,.1)
 }
 
 #chart {
@@ -141,6 +143,21 @@ header > h1 {
     margin: 30px 0;
 }
 
+#code {
+    margin: 30px 0;
+}
+
+#code .titlebar {
+    margin: 12px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+#js, #json {
+    width: 100%;
+    height: 300px;
+}
+
 .container {
     width: 1024px;
     margin: 0 auto;
@@ -149,6 +166,11 @@ header > h1 {
 a {
     color: rgb(251, 154, 153);
     text-decoration: none;
+}
+
+button {
+    background: #EF3966;
+    border: none;
 }
 
 

@@ -17,7 +17,7 @@
 
     Bar.prototype._x0 = "";
     Bar.prototype._color = "";
-    Bar.prototype._palette = window.color.palettes.set3;
+    Bar.prototype._palette = window.color.palettes.default;
 
     Bar.prototype.data = autodraw( getset( "_data" ) );
     Bar.prototype.x0 = autodraw( getset( "_x0" ) );
@@ -185,7 +185,7 @@
     function mouseEnter ( ev ) {
         d3.select( this )
             .transition()
-            .style( "opacity", .6 )
+            .style( "opacity", .7 )
     }
 
     function mouseLeave ( ev ) {
