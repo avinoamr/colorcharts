@@ -188,7 +188,7 @@
             .attr( "data-axis", "x" )
             .attr( "transform", "translate(0," + ( y.range()[ 1 ] - 30 ) + ")" );
 
-        axis.call( xlabels( x ) )
+        axis.call( xlabels( x, y ) )
 
         var groups = svg.selectAll( "g[data-group]" )
             .data( data );
@@ -249,14 +249,15 @@
             })
     }
 
-    function xlabels ( x ) {
+    function xlabels ( x, y ) {
         var xAxis = d3.svg.axis()
             .scale( x )
             .orient( "bottom" )
             .tickSize( 10, 0 )
-            .ticks( 2 );
+            .ticks( 7 );
 
         return function () {
+            var maxh = 0;
             this.call( xAxis )
                 .each( function () {
                     d3.select( this )
@@ -266,10 +267,15 @@
                 .selectAll( "g.tick" )
                     .each( function () {
                         var tick = d3.select( this );
-                        tick.select( "line" ).attr( "stroke", "white" )
+                        // tick.select( "line" ).attr( "stroke", "white" )
                         var text = tick.select( "text" )
                             .attr( "fill", "white" )
-                    })
+
+                        maxh = Math.max( maxh, text.node().offsetHeight );
+                    });
+
+            maxh = maxh ? maxh + 8 : 0; 
+            y.range([ y.range()[ 0 ], y.range()[ 1 ] - maxh ])
         }
     }
 
