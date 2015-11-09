@@ -94,7 +94,7 @@
 
         var y = d3.scale.linear()
             .domain( [ 0, yExtent[ 1 ] ] )
-            .range( [ 0, svg.node().offsetHeight ] );
+            .range( [ 4, svg.node().offsetHeight ] );
 
         var allc = data.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
@@ -110,11 +110,15 @@
         var area = d3.svg.area()
             .x( function ( d ) { return x( d.x ) } )
             .y0( y.range()[ 1 ] )
-            .y1( function ( d ) { return y.range()[ 1 ] - y( d.y ) } )
+            .y1( function ( d ) { 
+                return y.range()[ 1 ] - y( d.y ) + y.range()[ 0 ];
+            })
 
         var line = d3.svg.line()
             .x( function ( d ) { return x( d.x ) } )
-            .y( function ( d ) { return y.range()[ 1 ] - y( d.y ) } )
+            .y( function ( d ) { 
+                return y.range()[ 1 ] - y( d.y ) + y.range()[ 0 ] 
+            })
 
         // start drawing
         var axis = svg.selectAll( "g[data-axis='x']" )
@@ -162,6 +166,25 @@
                 return c( d.key );
             })
             .style( "opacity", that._stack ? 1 : .1 );
+
+        var points = groups.selectAll( "circle[data-point]" )
+            .data( function ( d ) { return d.values })
+        points.exit().remove()
+        points.enter().append( "circle" )
+            .attr( "data-point", "" )
+            .attr( "r", 2 )
+
+        points
+            .attr( "cx", function ( d ) { 
+                return x( d.x ) 
+            })
+            .attr( "cy", function ( d ) {
+                return y.range()[ 1 ] - y( d.y ) + y.range()[ 0 ]
+            })
+            .attr( "fill", function ( d ) {
+                var key = this.parentNode.getAttribute( "data-group" );
+                return c( key );
+            })
     }
 
     function xlabels ( x ) {
