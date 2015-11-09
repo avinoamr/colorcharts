@@ -55,6 +55,7 @@
         var data = that._data.map( function ( d ) {
             return { x: d[ _x ], y: d[ _y ], c: d[ _c ], obj: d }
         })
+        var isTimeline = ( data[ 0 ] || {} ).x instanceof Date;
 
         // stack by colors
         var xExtent = d3.extent( data, function ( d ) { return d.x });
@@ -87,7 +88,7 @@
             .entries( data );
 
         // build the scales
-        var x = d3.time.scale()
+        var x = ( isTimeline ? d3.time.scale() : d3.scale.linear() )
             .domain( xExtent )
             .range( [ 0, svg.node().offsetWidth ] )
 
