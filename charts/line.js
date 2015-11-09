@@ -109,8 +109,7 @@
             .y1( function ( d ) { return y.range()[ 1 ] - y( d[ _y ] ) } )
 
         var line = d3.svg.line()
-            // .interpolate( "cardinal" )
-            .tension( .9 )
+            // .interpolate( "basis" )
             .x( function ( d ) { return x( d[ _x ] ) } )
             .y( function ( d ) { return y.range()[ 1 ] - y( d[ _y ] ) } )
 
@@ -122,15 +121,15 @@
             .attr( "data-line", function ( d ) {
                 return d.key;
             })
+            .attr( "fill", "none" )
+        
+        lines
             .attr( "d", function ( d ) { 
                 return line( d.values ) 
-            })
-            .attr( "fill", "none" )
-            .attr( "stroke", function ( d ) {
+            }).attr( "stroke", function ( d ) {
                 return c( d.key );
             })
-            .attr( "stroke-width", 3 )
-            .style( "opacity", 1 )
+        
 
         var areas = svg.selectAll( "path[data-area]" )
             .data( data );
@@ -140,14 +139,16 @@
             .attr( "data-area", function ( d ) {
                 return d.key;
             })
+            .attr( "stroke", "none" )
+            .style( "opacity", .1 )
+
+        areas
             .attr( "d", function ( d ) { 
                 return area( d.values ) 
             })
             .attr( "fill", function ( d ) {
                 return c( d.key );
-            })
-            .attr( "stroke", "none" )
-            .style( "opacity", .1 )
+            });
     }
 
 
