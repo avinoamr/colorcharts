@@ -53,8 +53,20 @@
 
         // extract the values for each obj
         var data = that._data.map( function ( d ) {
-            return { x: d[ _x ], y: d[ _y ], y0: 0, c: d[ _c ], obj: d }
+            var x = d[ _x ];
+            var y = d[ _y ];
+
+            if ( !( x instanceof Date ) || isNaN( +x ) ) {
+                throw new Error( "x-dimension must be a number or a Date" );
+            }
+
+            if ( isNaN( +y ) ) {
+                throw new Error( "y-dimension must be a number" );
+            }
+
+            return { x: x, y: y, y0: 0, c: d[ _c ], obj: d }
         })
+        
         var isTimeline = ( data[ 0 ] || {} ).x instanceof Date;
 
         // group by colors

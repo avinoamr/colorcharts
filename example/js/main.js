@@ -130,7 +130,23 @@ window.onload = function () {
 
         var data = bar.data()
             .map( function ( d ) { 
-                return "\t" + JSON.stringify( d ) + "," 
+                Object.keys( d )
+                    .filter( function ( k ) { 
+                        return d[ k ] instanceof Date
+                    })
+                    .forEach( function ( k ) {
+                        d[ k ].toJSON = function () {
+                            return "TODATE(" + this.getTime() + ")"
+                        }
+                    })
+
+                var json = JSON.stringify( d )
+                    .replace( /\"TODATE\((\d*)\)\"/, function ( match, t ) {
+                        var d = new Date( +t ).toISOString();
+                        return "new Date(" + JSON.stringify( d ) + ")"
+                    });
+
+                return "\t" + json + "," 
             });
 
         code = []
