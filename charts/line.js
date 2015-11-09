@@ -97,7 +97,8 @@
                 }
 
                 // sort it by the x-coordinate to make sure the path the drawing
-                // is sane
+                // is sane. d3 requires the input data to be ordered by the 
+                // x-coordinate in order to draw properly
                 data.sort( function ( d1, d2 ) {
                     return d1.x - d2.x;
                 })
@@ -107,6 +108,9 @@
             .entries( data );
 
         // fill-in the gaps
+        // d3 requires that all series groups will have same x-coordinates in 
+        // order to draw the lines correctly. This code fills in the gaps in the
+        // dataset by interpolating the would-be y-coordinate.
         var leaves = color.tree.dfs()
             .filter( function ( d, i, j ) { return j == 2 } )
             .values( function ( d ) { return d.values || d } )
@@ -136,13 +140,11 @@
 
         console.log( data );
 
-        // stacked graph
-        var stack = d3.layout.stack()
-            .values( function ( d ) { return d.values })
-
-        if ( that._stack ) {
-            stack( data );
-        }
+        // stacke the data
+        d3.layout.stack()
+            .values( function ( d ) { 
+                return d.values 
+            })( that._stack ? data : [] );
 
         // build the scales
         var x = ( isTimeline ? d3.time.scale() : d3.scale.linear() )
