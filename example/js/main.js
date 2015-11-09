@@ -180,7 +180,7 @@ window.onload = function () {
 
         code = [ 'color(document.querySelector("#chart"))' ]
             .concat( code )
-            .join( "\n" );
+            .join( "\n" ) + ";";
 
         js.setValue( code, -1 );
     }
