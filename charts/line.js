@@ -228,13 +228,16 @@
             .style( "opacity", that._stack ? .4 : .1 );
 
         var points = groups.selectAll( "circle[data-point]" )
-            .data( function ( d ) { return d.values })
+            .data( function ( d ) { 
+                // only show the points that were included in the original 
+                // dataset, excluding the ones that were generated to draw the 
+                // chart
+                return d.values.filter( function ( d ) { return !!d.obj })
+            })
         points.exit().remove()
         points.enter().append( "circle" )
             .attr( "data-point", "" )
-            .attr( "r", function () {
-                return 2;
-            })
+            .attr( "r", 2 )
 
         points
             .attr( "cx", function ( d ) { 
