@@ -62,6 +62,20 @@
         data = d3.nest()
             .key( function ( d ) { return d.c  || "" } )
             .rollup( function ( data ) {
+
+                // aggregate duplicate items for the same x-coordinate
+                // for cases where multiple items have the same x-value
+                data = d3.nest()
+                    .key( function ( d ) { return d.x } )
+                    .rollup( function ( items ) {
+                        return items.reduce( function ( v, d ) {
+                            v.y += d.y;
+                            return v;
+                        }, items[ 0 ] );
+                    })
+                    .entries( data )
+                    .map( function ( d ) { return d.values });
+
                 // if this line begins after the chart's start, add a zero-
                 // height segment to precede it
                 var minx = d3.min( data, function ( d ) { return d.x } );
