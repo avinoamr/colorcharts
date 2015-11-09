@@ -3,7 +3,7 @@ window.onload = function () {
 
     if ( chart == "line" ) {
         getLine()
-            .x( "count" )
+            .x( "release date" )
             .y( "number" )
             .data([
                 { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1, "release date": new Date( "September 17, 1999" ) },
