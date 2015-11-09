@@ -1,16 +1,16 @@
 window.onload = function () {
-    var chart = "bar";
+    var chart = "line";
 
     if ( chart == "line" ) {
         getLine()
             .x( "count" )
             .y( "number" )
             .data([
-                { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1 },
-                { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 39, "number": 5 },
-                { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8 },
-                { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
-                { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
+                { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1, "release date": new Date( "September 17, 1999" ) },
+                { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 39, "number": 5, "release date": new Date( "May 25, 1977" ) },
+                { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8, "release date": new Date( "June 25, 1982" ) },
+                { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2, "release date": new Date( "October 14, 1994" ) },
+                { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4, "release date": new Date( "July 2, 1997" ) }
             ]);
         } else if ( chart == "bar" ) {
             getBar()
@@ -53,6 +53,9 @@ window.onload = function () {
         set color ( v ) { getChart().color( v ); generateCode() },
         get color () { return getChart().color() || "" },
 
+        set stack ( v ) { getChart().stack( v ); generateCode() },
+        get stack () { return getChart().stack() || "" },
+
         set palette ( v ) {
             getChart().palette( window.color.palettes[ v ] );
             generateCode()
@@ -76,8 +79,9 @@ window.onload = function () {
         gui.add( obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio", Count: "count", Number: "number" } )
         gui.add( obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
     } else if ( chart == "line" ) {
-        gui.add( obj, "x", { Count: "count", Number: "number" } )
+        gui.add( obj, "x", { "Release Date": "release date", Count: "count", Number: "number" } )
         gui.add( obj, "y", { Count: "count", Number: "number" } )
+        gui.add( obj, "stack", { No: "", Yes: true } )
         gui.add( obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
         gui.add( obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
     }
