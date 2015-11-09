@@ -81,7 +81,7 @@
                 var minx = d3.min( data, function ( d ) { return d.x } );
                 if ( minx != xExtent[ 0 ] ) {
                     data.unshift( 
-                        { x: minx - .01, y: 0, y0: 0 }, 
+                        { x: minx, y: 0, y0: 0 }, 
                         { x: xExtent[ 0 ], y: 0, y0: 0 }
                     );
                 }
@@ -91,7 +91,7 @@
                 var maxx = d3.max( data, function ( d ) { return d.x } );
                 if ( maxx != xExtent[ 1 ] ) {
                     data.push( 
-                        { x: maxx + .01, y: 0, y0: 0 }, 
+                        { x: maxx, y: 0, y0: 0 }, 
                         { x: xExtent[ 1 ], y: 0, y0: 0 }
                     )
                 }
