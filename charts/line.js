@@ -47,7 +47,7 @@
         var svg = d3.select( that._el )
             .select( "svg" )
             .style( "height", "100%" )
-            .style( "width", "100%" );;
+            .style( "width", "100%" );
 
         var _x = that._x, _c = that._color, _y = that._y;
 

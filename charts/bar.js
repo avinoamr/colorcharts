@@ -13,6 +13,7 @@
 
     function Bar( el ) {
         this._el = el;
+        el.innerHTML = "<svg></svg>";
     }
 
     Bar.prototype._x1 = "";
@@ -44,13 +45,8 @@
     }
 
     function draw( that ) {
-        var el = that._el;
-        var svg = d3.select( el )
-            .selectAll( "svg" )
-            .data( [ that ] );
-
-        svg.enter()
-            .append( "svg" )
+        var svg = d3.select( that._el )
+            .select( "svg" )
             .style( "height", "100%" )
             .style( "width", "100%" );
 
@@ -134,7 +130,6 @@
                 var y = 0;
                 return "translate(" + x + "," + y + ")";
             })
-            
 
         var bars = groups.selectAll( "g[data-bar]" )
             .data( function ( d ) { return d.values } );
