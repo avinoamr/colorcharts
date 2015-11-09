@@ -130,9 +130,9 @@
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
-            .attr( "data-group", function ( d ) {
-                return d.key;
-            })
+        groups.attr( "data-group", function ( d ) {
+            return d.key;
+        })
 
         var lines = groups.selectAll( "path[data-line]" )
             .data( function ( d ) { return [ d ] } )
@@ -142,7 +142,6 @@
             .attr( "fill", "none" )
         lines
             .attr( "d", function ( d ) { 
-                console.log( d.values )
                 return line( d.values ) 
             })
             .attr( "stroke", function ( d ) {
