@@ -23,9 +23,18 @@ window.onload = function () {
             drawBar();
         })
 
+    document.querySelector( "#pie" )
+        .addEventListener( "click", function ( ev ) {
+            ev.preventDefault();
+            drawPie();
+        })
+
     // build the gui controls
     var gui = new dat.GUI();
     gui.obj = {
+        set value ( v ) { getChart().value( v ); generateCode() },
+        get value () { return getChart().value() },
+
         set x ( v ) { getChart().x( v ); generateCode() },
         get x () { return getChart().x() },
 
@@ -68,11 +77,18 @@ window.onload = function () {
             .line()
     }
 
+    function getPie() {
+        return window.color( document.querySelector( "#chart" ) )
+            .pie()
+    }
+
     function getChart() {
         if ( chart == "bar" ) {
             return getBar()
         } else if ( chart == "line" ) {
             return getLine();
+        } else if ( chart == "pie" ) {
+            return getPie();
         }
     }
 
@@ -128,6 +144,30 @@ window.onload = function () {
         gui.add( gui.obj, "x1", { None: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
         gui.add( gui.obj, "y", { Count: "count", Number: "number" } )
         gui.add( gui.obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio", Count: "count", Number: "number" } )
+        gui.add( gui.obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
+
+        generateCode()
+    }
+
+    function drawPie() {
+        chart = "pie"
+        getPie()
+            .value( "count" )
+            .color( "movie" )
+            .data([
+                { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1 },
+                { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 39, "number": 5 },
+                { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8 },
+                { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
+                { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
+            ]);
+
+        while ( gui.__controllers.length ) {
+            gui.remove( gui.__controllers[ 0 ] );
+        }
+
+        gui.add( gui.obj, "value", { Count: "count", Number: "number" } )
+        gui.add( gui.obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
         gui.add( gui.obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
 
         generateCode()
