@@ -172,16 +172,13 @@
 
         rects
             .transition()
-            .each( function ( d ) {
-                d.ystart = y( d.values.y0 );
-                d.yend = y( d.values.y + d.values.y0 );
-                d.yheight = d.ystart - d.yend;
-            })
             .attr( "y", function ( d ) {
-                return d.ystart - d.yheight; // leave enough room for the height
+                // start at the baseline + the height
+                return y( d.values.y + d.values.y0 );
             })
             .attr( "height", function ( d ) {
-                return d.yheight;
+                // height is end - start (as it's defined in y)
+                return y( d.values.y0 ) - y( d.values.y + d.values.y0 );
             })
             .attr( "width", function ( d ) {
                 return x1.rangeBand()

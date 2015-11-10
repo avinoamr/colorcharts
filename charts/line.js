@@ -49,22 +49,20 @@
             .style( "height", "100%" )
             .style( "width", "100%" );
 
-        var _x = that._x, _c = that._color, _y = that._y;
-
         // extract the values for each obj
         var data = that._data.map( function ( d ) {
-            var x = d[ _x ];
-            var y = d[ _y ];
+            var x = d[ that._x ];
+            var y = +d[ that._y ];
 
             if ( !( x instanceof Date ) || isNaN( +x ) ) {
                 throw new Error( "x-dimension must be a number or a Date" );
             }
 
-            if ( isNaN( +y ) ) {
+            if ( isNaN( y ) ) {
                 throw new Error( "y-dimension must be a number" );
             }
 
-            return { x: x, y: y, y0: 0, c: d[ _c ], obj: d }
+            return { x: x, y: y, y0: 0, c: d[ that._color ], obj: d }
         })
         
         var isTimeline = ( data[ 0 ] || {} ).x instanceof Date;
@@ -86,7 +84,7 @@
                         }, items[ 0 ] );
                     })
                     .entries( data )
-                    .map( function ( d ) { return d.values });
+                    .map( function ( d ) { return d.values } );
 
                 // if this line begins after the chart's start, add a zero-
                 // height segment to precede it
@@ -153,7 +151,7 @@
         // stacke the data
         d3.layout.stack()
             .values( function ( d ) { 
-                return d.values 
+                return d.values
             })( that._stack ? data : [] );
 
         // build the scales
@@ -164,7 +162,7 @@
         var yExtent = d3.extent( leaves, function ( d ) { return d.y + d.y0 } );
         var y = d3.scale.linear()
             .domain( [ 0, yExtent[ 1 ] ] )
-            .range( [ 4, svg.node().offsetHeight ] );
+            .range( [ svg.node().offsetHeight, 4 ] );
 
         var allc = data.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
@@ -178,19 +176,13 @@
         var c = that._palette.from && that._palette.to ? clin : cord;
 
         var area = d3.svg.area()
-            .x( function ( d ) { return x( d.x ) } )
-            .y0( function ( d ) {
-                return y.range()[ 1 ] + y.range()[ 0 ] - y( d.y0 );
-            })
-            .y1( function ( d ) { 
-                return y.range()[ 1 ] - y( d.y0 + d.y ) + y.range()[ 0 ];
-            })
+            .x( function ( d ) { return x( d.x ) })
+            .y0( function ( d ) { return y( d.y0 ) })
+            .y1( function ( d ) { return y( d.y0 + d.y ) })
 
         var line = d3.svg.line()
-            .x( function ( d ) { return x( d.x ) } )
-            .y( function ( d ) { 
-                return y.range()[ 1 ] - y( d.y0 + d.y ) + y.range()[ 0 ] 
-            })
+            .x( function ( d ) { return x( d.x ) })
+            .y( function ( d ) { return y( d.y0 + d.y ) })
 
         // start drawing
         var axis = svg.selectAll( "g[data-axis='x']" )
@@ -256,7 +248,7 @@
                 return x( d.x ) 
             })
             .attr( "cy", function ( d ) {
-                return y.range()[ 1 ] - y( d.y0 + d.y ) + y.range()[ 0 ]
+                return y( d.y0 + d.y );
             })
             .attr( "fill", function ( d ) {
                 var key = this.parentNode.getAttribute( "data-group" );
@@ -290,7 +282,10 @@
                     });
 
             maxh = maxh ? maxh + 8 : 0; 
-            y.range([ y.range()[ 0 ], y.range()[ 1 ] - maxh ])
+            y.range([ 
+                y.range()[ 0 ] - maxh, 
+                y.range()[ 1 ] 
+            ])
         }
     }
 
