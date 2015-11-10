@@ -20,13 +20,13 @@
     Bar.prototype._color = "";
     Bar.prototype._palette = window.color.palettes.default;
 
-    Bar.prototype.data = autodraw( getset( "_data" ) );
-    Bar.prototype.x0 = autodraw( getset( "_x0" ) );
-    Bar.prototype.x1 = autodraw( getset( "_x1" ) );
+    Bar.prototype.data = getset( "_data" );
+    Bar.prototype.x0 = getset( "_x0" );
+    Bar.prototype.x1 = getset( "_x1" );
     Bar.prototype.x = alias( "x0" );
-    Bar.prototype.y = autodraw( getset( "_y" ) );
-    Bar.prototype.color = autodraw( getset( "_color" ) );
-    Bar.prototype.palette = autodraw( getset( "_palette" ) );
+    Bar.prototype.y = getset( "_y" );
+    Bar.prototype.color = getset( "_color" );
+    Bar.prototype.palette = getset( "_palette" );
 
     // draw once
     Bar.prototype.draw = function () {
@@ -228,13 +228,6 @@
 
             this[ key ] = value;
             return this;
-        }
-    }
-
-    function autodraw ( fn ) {
-        return function () {
-            var rv = fn.apply( this, arguments );
-            return rv == this ? this.draw() : rv;
         }
     }
 

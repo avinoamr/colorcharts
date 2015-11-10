@@ -19,12 +19,12 @@
     Line.prototype._palette = window.color.palettes.default;;
     Line.prototype._stack = false;
 
-    Line.prototype.data = autodraw( getset( "_data" ) );
-    Line.prototype.x = autodraw( getset( "_x" ) );
-    Line.prototype.y = autodraw( getset( "_y" ) );
-    Line.prototype.stack = autodraw( getset( "_stack" ) );
-    Line.prototype.color = autodraw( getset( "_color" ) );
-    Line.prototype.palette = autodraw( getset( "_palette" ) );
+    Line.prototype.data = getset( "_data" );
+    Line.prototype.x = getset( "_x" );
+    Line.prototype.y = getset( "_y" );
+    Line.prototype.stack = getset( "_stack" );
+    Line.prototype.color = getset( "_color" );
+    Line.prototype.palette = getset( "_palette" );
 
     // draw once
     Line.prototype.draw = function () {
@@ -304,13 +304,6 @@
 
             this[ key ] = value;
             return this;
-        }
-    }
-
-    function autodraw ( fn ) {
-        return function () {
-            var rv = fn.apply( this, arguments );
-            return rv == this ? this.draw() : rv;
         }
     }
 
