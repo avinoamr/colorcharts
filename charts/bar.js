@@ -108,7 +108,7 @@
         var ally = colors.map( function ( d ) { return d.values.y + d.values.y0 } );
         var y = d3.scale.linear()
             .domain([ 0, d3.max( ally ) ])
-            .rangeRound([ 0, svg.node().offsetHeight ] );
+            .rangeRound([ svg.node().offsetHeight, 0 ] );
 
         var allc = colors.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
@@ -137,9 +137,7 @@
             .call( xlabels( x0, y ) )
             .transition()
             .attr( "transform", function ( d ) {
-                var x = x0( d.key );
-                var y = 0;
-                return "translate(" + x + "," + y + ")";
+                return "translate(" + x0( d.key ) + ",0)";
             })
 
         var bars = groups.selectAll( "g[data-bar]" )
@@ -174,11 +172,16 @@
 
         rects
             .transition()
+            .each( function ( d ) {
+                d.ystart = y( d.values.y0 );
+                d.yend = y( d.values.y + d.values.y0 );
+                d.yheight = d.ystart - d.yend;
+            })
             .attr( "y", function ( d ) {
-                return y.range()[ 1 ] - y( d.values.y ) - y( d.values.y0 )
+                return d.ystart - d.yheight; // leave enough room for the height
             })
             .attr( "height", function ( d ) {
-                return y( d.values.y );
+                return d.yheight;
             })
             .attr( "width", function ( d ) {
                 return x1.rangeBand()
@@ -225,7 +228,7 @@
 
             maxh += maxh ? 4 : 0;
             y.rangeRound([ 
-                y.range()[ 0 ] + maxh, 
+                y.range()[ 0 ] - maxh, 
                 y.range()[ 1 ] 
             ])
         }
