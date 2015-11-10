@@ -50,19 +50,31 @@
             .style( "height", "100%" )
             .style( "width", "100%" );
 
-        var _x0 = that._x0, _x1 = that._x1, _c = that._color, _y = that._y;
+        // extract the values for each obj
+        var data = that._data.map( function ( d ) {
+            var x0 = d[ that._x0 ];
+            var x1 = d[ that._x1 ];
+            var y = d[ that._y ];
+            var c = d[ that._color ];
+
+            if ( isNaN( +y ) ) {
+                throw new Error( "y-dimension must be a number" );
+            }
+
+            return { x0: x0, x1: x1, y: y, y0: 0, c: c, obj: d }
+        })
 
         // build the groups tree
         data = d3.nest()
-            .key( function ( d ) { return d[ _x0 ] || "" } )
-            .key( function ( d ) { return d[ _x1 ] || "" } )
-            .key( function ( d ) { return d[ _c ]  || "" } )
+            .key( function ( d ) { return d.x0 || "" } )
+            .key( function ( d ) { return d.x1 || "" } )
+            .key( function ( d ) { return d.c  || "" } )
             .rollup( function ( data ) {
                 return data.reduce( function ( v, d ) {
-                    return { y: v.y + d[ _y ], y0: 0 };
+                    return { y: v.y + d.y, y0: 0 };
                 }, { y: 0 } )
             })
-            .entries( that._data );
+            .entries( data );
 
         // extract the colors and bars from the data tree
         var bars = color.tree.dfs()
