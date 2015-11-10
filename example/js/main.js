@@ -32,26 +32,26 @@ window.onload = function () {
     // build the gui controls
     var gui = new dat.GUI();
     gui.obj = {
-        set value ( v ) { getChart().value( v ); generateCode() },
+        set value ( v ) { getChart().value( v ).draw(); generateCode() },
         get value () { return getChart().value() },
 
-        set x ( v ) { getChart().x( v ); generateCode() },
+        set x ( v ) { getChart().x( v ).draw(); generateCode() },
         get x () { return getChart().x() },
 
-        set x1 ( v ) { getChart().x1( v ); generateCode() },
+        set x1 ( v ) { getChart().x1( v ).draw(); generateCode() },
         get x1 () { return getChart().x1() || "" },
 
-        set y ( v ) { getChart().y( v ); generateCode() },
+        set y ( v ) { getChart().y( v ).draw(); generateCode() },
         get y () { return getChart().y() },
 
-        set color ( v ) { getChart().color( v ); generateCode() },
+        set color ( v ) { getChart().color( v ).draw(); generateCode() },
         get color () { return getChart().color() || "" },
 
-        set stack ( v ) { getChart().stack( v ); generateCode() },
+        set stack ( v ) { getChart().stack( v ).draw(); generateCode() },
         get stack () { return getChart().stack() || "" },
 
         set palette ( v ) {
-            getChart().palette( window.color.palettes[ v ] );
+            getChart().palette( window.color.palettes[ v ] ).draw();
             generateCode()
         },
 
@@ -108,7 +108,8 @@ window.onload = function () {
                 { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8, "release date": new Date( "June 25, 1982" ) },
                 { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2, "release date": new Date( "October 14, 1994" ) },
                 { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4, "release date": new Date( "July 2, 1997" ) }
-            ]);
+            ])
+            .draw();
 
         while ( gui.__controllers.length ) {
             gui.remove( gui.__controllers[ 0 ] );
@@ -134,7 +135,8 @@ window.onload = function () {
                 { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8 },
                 { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
                 { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
-            ]);
+            ])
+            .draw();
 
         while ( gui.__controllers.length ) {
             gui.remove( gui.__controllers[ 0 ] );
@@ -160,7 +162,8 @@ window.onload = function () {
                 { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8 },
                 { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
                 { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
-            ]);
+            ])
+            .draw();
 
         while ( gui.__controllers.length ) {
             gui.remove( gui.__controllers[ 0 ] );
@@ -216,6 +219,7 @@ window.onload = function () {
         code = []
             .concat( code )
             .concat( '.data([', data, '])' )
+            .concat( '.draw()' )
             .map( function ( l ) { return "\t" + l } );
 
         code = [ 'color(document.querySelector("#chart"))' ]
