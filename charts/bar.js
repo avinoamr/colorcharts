@@ -215,7 +215,7 @@
                 .style( "fill", "white" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", function ( d ) {
-                    return "translate(" + w + "," + ( h - 3 ) + ")"
+                    return "translate(" + w + "," + ( y.range()[ 0 ] - 3 ) + ")"
                 })
 
             // side-effect: modify the y-range to leave space for the label

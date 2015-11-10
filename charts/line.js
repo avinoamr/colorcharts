@@ -190,7 +190,7 @@
 
         axis.enter().append( "g" )
             .attr( "data-axis", "x" )
-            .attr( "transform", "translate(0," + ( y.range()[ 1 ] - 30 ) + ")" );
+            .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
 
         axis.call( xlabels( x, y ) )
 
