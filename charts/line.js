@@ -150,8 +150,6 @@
             })
         })
 
-        console.log( data );
-
         // stacke the data
         d3.layout.stack()
             .values( function ( d ) { 
