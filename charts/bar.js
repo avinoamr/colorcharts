@@ -52,16 +52,15 @@
 
         // extract the values for each obj
         var data = that._data.map( function ( d ) {
-            var x0 = d[ that._x0 ];
-            var x1 = d[ that._x1 ];
-            var y = d[ that._y ];
-            var c = d[ that._color ];
-
-            if ( isNaN( +y ) ) {
+            var y = +d[ that._y ];
+            if ( isNaN( y ) ) {
                 throw new Error( "y-dimension must be a number" );
             }
 
-            return { x0: x0, x1: x1, y: y, y0: 0, c: c, obj: d }
+            return { 
+                x0: d[ that._x0 ], x1: d[ that._x1 ], c: d[ that._color ],
+                y: y, y0: 0, obj: d 
+            }
         })
 
         // build the groups tree
@@ -72,7 +71,7 @@
             .rollup( function ( data ) {
                 return data.reduce( function ( v, d ) {
                     return { y: v.y + d.y, y0: 0 };
-                }, { y: 0 } )
+                }, { y: 0, y0: 0 } )
             })
             .entries( data );
 
