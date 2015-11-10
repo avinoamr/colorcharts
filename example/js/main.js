@@ -1,5 +1,18 @@
 window.onload = function () {
     var chart;
+
+    // setTimeout( function () {
+    //     window.color( document.querySelector( "#chart" ) )
+    //         .legend()
+    //         .color( "color" )
+    //         .value( "value" )
+    //         .data([
+    //             { value: "hello", color: "1" },
+    //             { value: "world", color: "2" }
+    //         ])
+    //         .draw();
+    // })
+
     setTimeout( drawBar );
 
     var js = ace.edit( "js" )
