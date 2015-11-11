@@ -3,6 +3,17 @@
 })();
 (function () {
     var color = window.color;
+    color.palettes = {
+
+        // 
+        "paired": [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99", "#b15928" ],
+        "default": [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f" ],
+        
+        "greens": { from: "#c7e9c0", to: "#00441b" }
+    }
+})();
+(function () {
+    var color = window.color;
     color.tree = {};
 
     color.tree.dfs = function () {
@@ -45,17 +56,6 @@
                 return results.concat( dfs( d, i, depth + 1 ) );
             }, results )
         }
-    }
-})();
-(function () {
-    var color = window.color;
-    color.palettes = {
-
-        // 
-        "paired": [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99", "#b15928" ],
-        "default": [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f" ],
-        
-        "greens": { from: "#c7e9c0", to: "#00441b" }
     }
 })();
 (function() {
@@ -186,17 +186,14 @@
         legend.enter().append( "g" )
             .attr( "data-bar-legend", "" )
             .attr( "transform", "translate(35,10)" )
-        that.legend()
-            .palette( palette )
-            .data( colors )
-            .draw( legend )
+        legend.call( that.legend().palette( palette ) );
         legend = legend.node()
         if ( legend ) {
             var height = legend.getBBox().height;
             y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
         }
 
-        // start bars
+        // draw the bars
         var groups = svg.selectAll( "g[data-bar-group]" )
             .data( data );
         groups.exit().remove();
@@ -241,8 +238,8 @@
                 return c( d.key );
             })
             .each( function () {
-                this.addEventListener( "mouseenter", mouseEnter )
-                this.addEventListener( "mouseleave", mouseLeave )
+                this.addEventListener( "mouseenter", mouseEnter( svg ) )
+                this.addEventListener( "mouseleave", mouseLeave( svg ) )
             })
 
         rects
@@ -263,16 +260,20 @@
             })
     }
 
-    function mouseEnter ( ev ) {
-        d3.select( this )
-            .transition()
-            .style( "opacity", .7 )
+    function mouseEnter ( svg ) {
+        return function () {
+            d3.select( this )
+                .transition()
+                .style( "opacity", .7 )
+        }
     }
 
-    function mouseLeave ( ev ) {
-        d3.select( this )
-            .transition()
-            .style( "opacity", 1 )
+    function mouseLeave ( svg ) {
+        return function () {
+            d3.select( this )
+                .transition()
+                .style( "opacity", 1 )
+        }
     }
 
     function xlabels ( x, y ) {
@@ -333,7 +334,7 @@
             direction: HORIZONTAL
         }
 
-        function legend ( el ) { return legend.draw( bar, el ) }
+        function legend ( el ) { return legend.draw( el ) }
         legend.value = getset( options, "value" );
         legend.color = getset( options, "color" );
         legend.palette = getset( options, "palette" );
@@ -349,11 +350,24 @@
 
     function draw ( that, el ) {
 
+        if ( !el.node() ) {
+            return; // no parent
+        }
+
+        // read the data, either from the legend or the element
+        var data = that.data() || el.datum();
+
         // extract the values for each obj
         var radius = 6;
-        var data = that.data().map( function ( d ) {
+        var data = data.map( function ( d ) {
             return { v: d[ that.value() ], c: d[ that.color() ], obj: d }
         })
+
+        // deduplication
+        data = d3.nest()
+            .key( function ( d ) { return d.c } )
+            .entries( data )
+            .map( function ( d ) { return d.values[ 0 ] } );
 
         var palette = that.palette();
         var allc = data.map( function ( d ) { return d.c } );
@@ -369,13 +383,11 @@
 
         // start drawing
         var groups = el.selectAll( "g[data-legend-group]" )
-
-        // debugger;
         groups = groups.data( data )
         groups.exit().remove();
         groups.enter().append( "g" )
             .attr( "data-legend-group", function ( d ) { 
-                return d.v 
+                return d.v;
             });
 
         // we have to process each legend separately in order to compute the 
@@ -479,7 +491,7 @@
             var x = d[ that.x() ];
             var y = +d[ that.y() ];
 
-            if ( !( x instanceof Date ) || isNaN( +x ) ) {
+            if ( !( x instanceof Date ) && isNaN( +x ) ) {
                 throw new Error( "x-dimension must be a number or a Date" );
             }
 
@@ -551,29 +563,38 @@
             .values( function ( d ) { return d.values || d } )
             .entries( data );
 
-        var xAll = leaves.map( function ( d ) { return d.x });
+        // iterate over all array-indices, until we reach an index where none of 
+        // the data items have a value for - thus reaching the end.
+        var i = -1, ix;
+        for ( i = 0 ; ; i += 1 ) {
+            // compute the minimal x-value that should be associated with this 
+            // array-index
+            ix = d3.min( data, function ( d ) { 
+                return ( d.values[ i ] || {} ).x 
+            });
 
-        data.map( function ( d ) {
-            return d.values;
-        })
-        .forEach( function ( data ) {
-            xAll.forEach( function ( x ) {
-                var closest = data.reduce( function ( closest, d, i ) {
-                    return d.x > x ? closest : { x: d.x, y: d.y, i: i };
-                }, { x: data[ 0 ].x, y: data[ 0 ].y, i: 0 } );
+            // if no values exist for this array-index, on all lines, we're done
+            if ( ix == undefined ) { break }
 
-                if ( x == closest.x ) return; 
-                var after = data[ closest.i + 1 ];
+            // ensure that all values contains the same x-coordinate on this 
+            // array-index
+            data.forEach( function ( d ) {
+                var d1 = d.values[ i ];
 
-                var total = after.x - closest.x;
-                var part = x - closest.x;
+                if ( d1.x == ix ) return;
 
-                var y = d3.interpolate( closest.y, after.y )( part / total );
-                data.splice( closest.i + 1, 0, { x: x, y: y, y0: 0 } )
+                // incorrect x-coordinate for this array-index, add an 
+                // artificial point as the interpolation between the current
+                // point, and the previous one.
+                var d0 = d.values[ i - 1 ];
+                var total = d1.x - d0.x;
+                var part = ix - d0.x;
+                var y = d3.interpolate( d0.y, d1.y )( part / total );
+                d.values.splice( i, 0, { x: ix, y: y, y0: 0 } )
             })
-        })
+        }
 
-        // stacke the data
+        // stack the data
         d3.layout.stack()
             .values( function ( d ) { 
                 return d.values
@@ -619,16 +640,12 @@
         legend.enter().append( "g" )
             .attr( "data-line-legend", "" )
             .attr( "transform", "translate(35,10)" )
-        that.legend()
-            .palette( palette )
-            .data( data )
-            .draw( legend )
+        legend.call( that.legend().palette( palette ) );
         legend = legend.node()
         if ( legend ) {
             var height = legend.getBBox().height;
             y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
         }
-
 
         // start drawing
         var axis = svg.selectAll( "g[data-line-axis='x']" )
@@ -749,6 +766,92 @@
 })();
 (function () {
     var color = window.color;
+    color.numbers = function () {
+        var options = {
+            data: null,
+            key: "key",
+            value: "value",
+        };
+
+        function numbers( el ) { return numbers.draw( el ) }
+        numbers.key = getset( options, "key" )
+        numbers.value = getset( options, "value" )
+        numbers.data = getset( options, "data" );
+        numbers.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
+        return numbers;
+    }
+
+    function draw( that, el ) {
+        if ( !el.node() ) {
+            return; // no parent
+        }
+
+        // read the data, either from the legend or the element
+        var data = that.data() || el.datum();
+
+        // extract the values for each obj
+        data = data.map( function ( d ) {
+            return { k: d[ that.key() ], v: d[ that.value() ] }
+        })
+
+        var numbers = el.selectAll( "g[data-numbers]" )
+            .data( data );
+        numbers.exit().remove()
+        numbers.enter().append( "g" )
+            .attr( "data-numbers", function ( d ) { return d.k } );
+
+        var y = 0, x = 0;
+        numbers.each( function ( d ) {
+            var number = d3.select( this )
+                .attr( "transform", "translate(" + x + "," + y + ")" );
+
+            var value = number.selectAll( "text[data-numbers-value]" )
+                .data( [ d ] );
+            value.enter().append( "text" )
+                .attr( "data-numbers-value", "" )
+                .attr( "alignment-baseline", "hanging" )
+                .style( "font", "22px sans-serif" )
+                .style( "fill", "white" )
+                .style( "font-weight", "bold" )
+            value.text( function ( d ) { return d.v } )
+
+            var height = value.node().offsetHeight;
+
+            var key = number.selectAll( "text[data-numbers-key]" )
+                .data( [ d ] );
+            key.enter().append( "text" )
+                .attr( "data-numbers-key", "" )
+                .attr( "alignment-baseline", "hanging" )
+                .style( "font", "11px sans-serif" )
+                .style( "fill", "white" )
+                .style( "opacity", .4 )
+                .style( "font-weight", "200" )
+            key.text( function ( d ) { return d.k } )
+                .attr( "transform", "translate(0," + height + ")" );
+
+            height += key.node().offsetHeight;
+            y += height + 8
+        })
+    }
+
+    function getset ( options, key ) {
+        return function ( value ) {
+            if ( arguments.length == 0 ) {
+                return options[ key ];
+            }
+
+            options[ key ] = value;
+            return this;
+        }
+    }
+
+})();
+(function () {
+    var color = window.color;
     color.pie = function () {
         var options = {
             value: null,
@@ -840,17 +943,22 @@
             .outerRadius( radius )
             .innerRadius( 0 );
 
-        // start drawing
+        // summary
+        var summary = svg.selectAll( "g[data-pie-summary]" )
+            .data( [ data ] )
+        summary.enter().append( "g" )
+            .attr( "data-pie-summary", "" )
+            .attr( "transform", "translate(" + ( width - 200 ) + ",0)" );
+
+        // draw the legend
         var legend = svg.selectAll( "g[data-pie-legend]" )
             .data( [ data ] );
         legend.enter().append( "g" )
             .attr( "data-pie-legend", "" )
-        legend.attr( "transform", "translate(35,10)" )
-        that.legend()
-            .data( data )
-            .palette( that.palette() )
-            .draw( legend );
+            .attr( "transform", "translate(35,10)" )
+        legend.call( that.legend().palette( palette ) );
 
+        // start drawing
         var pies = svg.selectAll( "g[data-pie]" )
             .data( [ data ] );
         pies.enter().append( "g" )
@@ -863,6 +971,10 @@
             .data( function ( d ) { return d } );
         slices.exit().remove();
         slices.enter().append( "path" )
+            .each( function () {
+                this.addEventListener( "mouseenter", mouseEnter( svg ) )
+                this.addEventListener( "mouseleave", mouseLeave( svg ) )
+            })
         slices
             .attr( "data-pie-slice", function ( d ) {
                 return d.key;
@@ -871,6 +983,41 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
+    }
+
+    function mouseEnter( svg ) {
+        return function ( ev ) {
+            var datum = d3.select( this ).datum();
+            var summary = svg.selectAll( "g[data-pie-summary]" )
+                .data( [ datum ] )
+            summary.enter().append( "g" )
+                .attr( "data-pie-summary", "" )
+                .attr( "transform", "translate(" + ( svg.node().offsetWidth - 200 ) + ",0)" )
+            summary
+                .datum([ datum ])
+                .call( color.numbers() )
+
+            var slice = this;
+            var parent = d3.select( slice.parentNode );
+            parent.selectAll( "path[data-pie-slice]" )
+                .each( function () {
+                    d3.select( this )
+                        .transition()
+                        .style( "opacity", this == slice ? 1 : .8 )
+                })
+        }
+    }
+
+    function mouseLeave( summary ) {
+        return function ( ev ) {
+            // summary
+            //     .datum( [] )
+            //     .call( color.numbers() )
+            var parent = d3.select( this.parentNode );
+            parent.selectAll( "path[data-pie-slice]" )
+                .transition()
+                .style( "opacity", 1 );
+        }
     }
 
     function getset ( options, key ) {
