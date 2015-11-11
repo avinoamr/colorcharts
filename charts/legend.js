@@ -54,7 +54,6 @@
         // groups.exit().remove();
         groups.enter().append( "g" )
             .attr( "data-legend-group", function ( d ) { 
-                console.log( "HERE?2" );
                 return d.v 
             });
 

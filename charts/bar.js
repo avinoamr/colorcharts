@@ -8,6 +8,9 @@
             color: null,
             palette: window.color.palettes.default,
             data: null,
+            legend: color.legend()
+                .value( "key" )
+                .color( "key" )
         }
 
         function bar ( el ) { return bar.draw( bar, el ) }
@@ -18,6 +21,7 @@
         bar.color = getset( options, "color" );
         bar.palette = getset( options, "palette" );
         bar.data = getset( options, "data" );
+        bar.legend = function () { return options.legend }
         bar.draw = function ( el ) {
             draw( this, el );
             return this;
@@ -121,12 +125,16 @@
         legend.exit().remove();
         legend.enter().append( "g" )
             .attr( "data-bar-legend", "" )
-        color.legend()
-            .value( "key" )
-            .color( "key" )
+            .attr( "transform", "translate(35,10)" )
+        that.legend()
             .palette( palette )
             .data( colors )
             .draw( legend )
+        legend = legend.node()
+        if ( legend ) {
+            var height = legend.getBBox().height;
+            y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
+        }
 
         // start bars
         var groups = svg.selectAll( "g[data-bar-group]" )

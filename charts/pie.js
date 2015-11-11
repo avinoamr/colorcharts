@@ -91,9 +91,7 @@
             .data( [ data ] );
         legend.enter().append( "g" )
             .attr( "data-pie-legend", "" )
-        legend.attr( "transform", function () {
-            return "translate(35,10)"
-        })
+        legend.attr( "transform", "translate(35,10)" )
         color.legend()
             .data( data )
             .color( "key" )
