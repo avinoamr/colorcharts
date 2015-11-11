@@ -68,6 +68,9 @@
             color: null,
             palette: window.color.palettes.default,
             data: null,
+            legend: color.legend()
+                .value( "key" )
+                .color( "key" )
         }
 
         function bar ( el ) { return bar.draw( bar, el ) }
@@ -78,6 +81,7 @@
         bar.color = getset( options, "color" );
         bar.palette = getset( options, "palette" );
         bar.data = getset( options, "data" );
+        bar.legend = getset( options, "legend" );
         bar.draw = function ( el ) {
             draw( this, el );
             return this;
@@ -170,12 +174,34 @@
 
         var c = palette.from && palette.to ? clin : cord;
 
-        // start drawing
-        var groups = svg.selectAll( "g[data-group]" )
+        // draw the legend
+        // only if there's more than 1 color, and we don't show the labels on
+        // the group (x0) and bar (x1)
+        var legend = c.domain().length > 1
+            && that.color() != that.x0()
+            && that.color() != that.x1();
+        var legend = svg.selectAll( "g[data-bar-legend]" )
+            .data( legend ? [ colors ] : [] )
+        legend.exit().remove();
+        legend.enter().append( "g" )
+            .attr( "data-bar-legend", "" )
+            .attr( "transform", "translate(35,10)" )
+        that.legend()
+            .palette( palette )
+            .data( colors )
+            .draw( legend )
+        legend = legend.node()
+        if ( legend ) {
+            var height = legend.getBBox().height;
+            y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
+        }
+
+        // start bars
+        var groups = svg.selectAll( "g[data-bar-group]" )
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
-            .attr( "data-group", function ( d ) {
+            .attr( "data-bar-group", function ( d ) {
                 return d.key;
             })
             .attr( "transform", function ( d ) {
@@ -204,11 +230,11 @@
                 return "translate(" + x1( d.key ) + ",0)";
             })
 
-        var rects = bars.selectAll( "rect[data-color]" )
+        var rects = bars.selectAll( "rect[data-bar-color]" )
             .data( function ( d ) { return d.values } );
         rects.exit().remove();
         rects.enter().append( "rect" )
-            .attr( "data-color", function ( d ) {
+            .attr( "data-bar-color", function ( d ) {
                 return d.key;
             })
             .attr( "fill", function ( d ) {
@@ -295,90 +321,72 @@
 })();
 (function () {
     var color = window.color;
-    color.legend = function ( el ) {
-        var legend = d3.select( el ).data()[ 0 ];
+    var HORIZONTAL = "horizontal";
+    var VERTICAL = "vertical";
 
-        if ( !( legend instanceof Legend ) ) {
-            var legend = new Legend( el );
-            d3.select( el ).data( [ legend ] );
+    color.legend = function ( el ) {
+        var options = {
+            value: null,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
+            direction: HORIZONTAL
         }
-        
+
+        function legend ( el ) { return legend.draw( bar, el ) }
+        legend.value = getset( options, "value" );
+        legend.color = getset( options, "color" );
+        legend.palette = getset( options, "palette" );
+        legend.data = getset( options, "data" );
+        legend.direction = getset( options, "direction" );
+        legend.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
         return legend;
     }
 
-    function Legend( el ) {
-        this._el = el;
-        el.innerHTML = "<svg></svg>";
-    }
-
-    Legend.prototype._palette = window.color.palettes.default;;
-    Legend.prototype._color = null;
-
-    Legend.prototype.data = getset( "_data" );
-    Legend.prototype.value = getset( "_value" );
-    Legend.prototype.color = getset( "_color" );
-    Legend.prototype.palette = getset( "_palette" );
-
-    // draw once
-    Legend.prototype.draw = function () {
-        if ( !this._drawing ) {
-            this._drawing = setTimeout( this._draw.bind( this ), 0 );
-        }
-        return this;
-    }
-
-    // actual drawing
-    Legend.prototype._draw = function () {
-        clearTimeout( this._drawing );
-        delete this._drawing;
-        draw( this );
-        return this;
-    }
-
-
-    function draw( that ) {
-        var svg = d3.select( that._el )
-            .select( "svg" )
-            .style( "height", "100%" )
-            .style( "width", "100%" );
-
-        var radius = 6;
-        var _v = that._value, _c = that._color;
+    function draw ( that, el ) {
 
         // extract the values for each obj
-        var data = that._data.map( function ( d ) {
-            return { v: d[ _v ], c: d[ _c ], obj: d }
+        var radius = 6;
+        var data = that.data().map( function ( d ) {
+            return { v: d[ that.value() ], c: d[ that.color() ], obj: d }
         })
 
-        var allc = data.map( function ( d ) { return d.key } );
+        var palette = that.palette();
+        var allc = data.map( function ( d ) { return d.c } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
-            .range( [ that._palette.from, that._palette.to ] );
+            .range( [ palette.from, palette.to ] );
 
         var cord = d3.scale.ordinal()
             .domain( allc )
-            .range( that._palette )
+            .range( palette )
 
-        var c = that._palette.from && that._palette.to ? clin : cord;
+        var c = palette.from && palette.to ? clin : cord;
 
         // start drawing
-        var groups = svg.selectAll( "g[data-group]" )
-            .data( data )
+        var groups = el.selectAll( "g[data-legend-group]" )
 
+        // debugger;
+        groups = groups.data( data )
         groups.exit().remove();
         groups.enter().append( "g" )
-            .attr( "data-group", function ( d ) { 
+            .attr( "data-legend-group", function ( d ) { 
                 return d.v 
             });
 
         // we have to process each legend separately in order to compute the 
         // width used by each group before using it to compute the x-coordinate
         // of the next group
-        var x = 0;
+        var direction = that.direction();
+        var x = 0, y = 0;
         groups.transition().each( function ( d ) {
             var group = d3.select( this )
                 .attr( "transform", function () {
-                    return "translate(" + x + ",0)";
+                    return "translate(" + x + "," + y + ")";
                 });
 
             var circle = group.selectAll( "circle" )
@@ -401,18 +409,23 @@
                 .attr( "alignment-baseline", "middle" )
                 .attr( "fill", "white" );
 
-            x += label.node().offsetWidth + radius * 3 + 4;
-        })
+            x += direction == HORIZONTAL 
+                ? label.node().offsetWidth + radius * 3 + 4
+                : 0;
 
+            y += direction == VERTICAL
+                ? label.node().offsetHeight + radius + 4
+                : 0;
+        })
     }
 
-    function getset ( key ) {
+    function getset ( options, key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
-                return this[ key ];
+                return options[ key ];
             }
 
-            this[ key ] = value;
+            options[ key ] = value;
             return this;
         }
     }
@@ -428,6 +441,9 @@
             color: null,
             palette: window.color.palettes.default,
             data: null,
+            legend: color.legend()
+                .value( "key" )
+                .color( "key" )
         }
 
         function line ( el ) { return line.draw( bar, el ) }
@@ -437,6 +453,7 @@
         line.color = getset( options, "color" );
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
+        line.legend = getset( options, "legend" );
         line.draw = function ( el ) {
             draw( this, el );
             return this;
@@ -593,21 +610,41 @@
             .x( function ( d ) { return x( d.x ) })
             .y( function ( d ) { return y( d.y0 + d.y ) })
 
+        // draw the legend
+        // only if we have more than one color
+        var legend = c.domain().length > 1;
+        var legend = svg.selectAll( "g[data-line-legend]" )
+            .data( legend ? [ data ] : [] )
+        legend.exit().remove();
+        legend.enter().append( "g" )
+            .attr( "data-line-legend", "" )
+            .attr( "transform", "translate(35,10)" )
+        that.legend()
+            .palette( palette )
+            .data( data )
+            .draw( legend )
+        legend = legend.node()
+        if ( legend ) {
+            var height = legend.getBBox().height;
+            y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
+        }
+
+
         // start drawing
-        var axis = svg.selectAll( "g[data-axis='x']" )
+        var axis = svg.selectAll( "g[data-line-axis='x']" )
             .data( [ data ] )
 
         axis.enter().append( "g" )
-            .attr( "data-axis", "x" )
+            .attr( "data-line-axis", "x" )
             .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
 
         axis.call( xlabels( x, y ) )
 
-        var groups = svg.selectAll( "g[data-group]" )
+        var groups = svg.selectAll( "g[data-line-group]" )
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
-        groups.attr( "data-group", function ( d ) {
+        groups.attr( "data-line-group", function ( d ) {
             return d.key;
         })
 
@@ -625,11 +662,11 @@
                 return c( d.key );
             });
 
-        var areas = groups.selectAll( "path[data-area]" )
+        var areas = groups.selectAll( "path[data-line-area]" )
             .data( function ( d ) { return [ d ] } );
         areas.exit().remove()
         areas.enter().append( "path" )
-            .attr( "data-area", "" )
+            .attr( "data-line-area", "" )
             .attr( "stroke", "none" )
         areas
             .attr( "d", function ( d ) { 
@@ -640,7 +677,7 @@
             })
             .style( "opacity", that.stack() ? .4 : .1 );
 
-        var points = groups.selectAll( "circle[data-point]" )
+        var points = groups.selectAll( "circle[data-line-point]" )
             .data( function ( d ) { 
                 // only show the points that were included in the original 
                 // dataset, excluding the ones that were generated to draw the 
@@ -649,7 +686,7 @@
             })
         points.exit().remove()
         points.enter().append( "circle" )
-            .attr( "data-point", "" )
+            .attr( "data-line-point", "" )
             .attr( "r", 2 )
 
         points
@@ -660,7 +697,7 @@
                 return y( d.y0 + d.y );
             })
             .attr( "fill", function ( d ) {
-                var key = this.parentNode.getAttribute( "data-group" );
+                var key = this.parentNode.getAttribute( "data-line-group" );
                 return c( key );
             })
     }
@@ -718,6 +755,10 @@
             color: null,
             palette: window.color.palettes.default,
             data: null,
+            legend: color.legend()
+                .color( "key" )
+                .value( "key" )
+                .direction( "vertical" )
         }
 
         function pie ( el ) { return pie.draw( bar, el ) }
@@ -725,6 +766,7 @@
         pie.color = getset( options, "color" );
         pie.palette = getset( options, "palette" );
         pie.data = getset( options, "data" );
+        pie.legend = getset( options, "legend" );
         pie.draw = function ( el ) {
             draw( this, el );
             return this;
@@ -799,20 +841,30 @@
             .innerRadius( 0 );
 
         // start drawing
-        var pie = svg.selectAll( "g[pie]" )
+        var legend = svg.selectAll( "g[data-pie-legend]" )
             .data( [ data ] );
-        pie.enter().append( "g" )
+        legend.enter().append( "g" )
+            .attr( "data-pie-legend", "" )
+        legend.attr( "transform", "translate(35,10)" )
+        that.legend()
+            .data( data )
+            .palette( that.palette() )
+            .draw( legend );
+
+        var pies = svg.selectAll( "g[data-pie]" )
+            .data( [ data ] );
+        pies.enter().append( "g" )
             .attr( "data-pie", "" )
             .attr( "transform", function () {
                 return "translate(" + ( width / 2 ) + "," + ( height / 2 ) + ")";
             });
 
-        var slices = pie.selectAll( "path[data-slice]" )
+        var slices = pies.selectAll( "path[data-pie-slice]" )
             .data( function ( d ) { return d } );
         slices.exit().remove();
         slices.enter().append( "path" )
         slices
-            .attr( "data-slice", function ( d ) {
+            .attr( "data-pie-slice", function ( d ) {
                 return d.key;
             })
             .attr( "d", arc )
