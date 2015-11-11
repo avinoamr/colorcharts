@@ -87,6 +87,21 @@
             .innerRadius( 0 );
 
         // start drawing
+        var legend = svg.selectAll( "g[data-legend]" )
+            .data( [ data ] );
+        legend.enter().append( "g" )
+            .attr( "data-legend", "" )
+        legend.attr( "transform", function () {
+            return "translate(35,10)"
+        })
+        color.legend()
+            .data( data )
+            .color( "key" )
+            .value( "key" )
+            .direction( "vertical" )
+            .palette( that.palette() )
+            .draw( legend );
+
         var pie = svg.selectAll( "g[pie]" )
             .data( [ data ] );
         pie.enter().append( "g" )

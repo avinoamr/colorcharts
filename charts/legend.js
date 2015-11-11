@@ -1,75 +1,54 @@
 (function () {
     var color = window.color;
-    color.legend = function ( el ) {
-        var legend = d3.select( el ).data()[ 0 ];
+    var HORIZONTAL = "horizontal";
+    var VERTICAL = "vertical";
 
-        if ( !( legend instanceof Legend ) ) {
-            var legend = new Legend( el );
-            d3.select( el ).data( [ legend ] );
+    color.legend = function ( el ) {
+        var options = {
+            value: null,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
+            direction: HORIZONTAL
         }
-        
+
+        function legend ( el ) { return legend.draw( bar, el ) }
+        legend.value = getset( options, "value" );
+        legend.color = getset( options, "color" );
+        legend.palette = getset( options, "palette" );
+        legend.data = getset( options, "data" );
+        legend.direction = getset( options, "direction" );
+        legend.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
         return legend;
     }
 
-    function Legend( el ) {
-        this._el = el;
-        el.innerHTML = "<svg></svg>";
-    }
-
-    Legend.prototype._palette = window.color.palettes.default;;
-    Legend.prototype._color = null;
-
-    Legend.prototype.data = getset( "_data" );
-    Legend.prototype.value = getset( "_value" );
-    Legend.prototype.color = getset( "_color" );
-    Legend.prototype.palette = getset( "_palette" );
-
-    // draw once
-    Legend.prototype.draw = function () {
-        if ( !this._drawing ) {
-            this._drawing = setTimeout( this._draw.bind( this ), 0 );
-        }
-        return this;
-    }
-
-    // actual drawing
-    Legend.prototype._draw = function () {
-        clearTimeout( this._drawing );
-        delete this._drawing;
-        draw( this );
-        return this;
-    }
-
-
-    function draw( that ) {
-        var svg = d3.select( that._el )
-            .select( "svg" )
-            .style( "height", "100%" )
-            .style( "width", "100%" );
-
-        var radius = 6;
-        var _v = that._value, _c = that._color;
+    function draw( that, el ) {
 
         // extract the values for each obj
-        var data = that._data.map( function ( d ) {
-            return { v: d[ _v ], c: d[ _c ], obj: d }
+        var radius = 6;
+        var data = that.data().map( function ( d ) {
+            return { v: d[ that.value() ], c: d[ that.color() ], obj: d }
         })
 
-        var allc = data.map( function ( d ) { return d.key } );
+        var palette = that.palette();
+        var allc = data.map( function ( d ) { return d.c } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
-            .range( [ that._palette.from, that._palette.to ] );
+            .range( [ palette.from, palette.to ] );
 
         var cord = d3.scale.ordinal()
             .domain( allc )
-            .range( that._palette )
+            .range( palette )
 
-        var c = that._palette.from && that._palette.to ? clin : cord;
+        var c = palette.from && palette.to ? clin : cord;
 
         // start drawing
-        var groups = svg.selectAll( "g[data-group]" )
+        var groups = el.selectAll( "g[data-group]" )
             .data( data )
-
         groups.exit().remove();
         groups.enter().append( "g" )
             .attr( "data-group", function ( d ) { 
@@ -79,11 +58,12 @@
         // we have to process each legend separately in order to compute the 
         // width used by each group before using it to compute the x-coordinate
         // of the next group
-        var x = 0;
+        var direction = that.direction();
+        var x = 0, y = 0;
         groups.transition().each( function ( d ) {
             var group = d3.select( this )
                 .attr( "transform", function () {
-                    return "translate(" + x + ",0)";
+                    return "translate(" + x + "," + y + ")";
                 });
 
             var circle = group.selectAll( "circle" )
@@ -106,18 +86,23 @@
                 .attr( "alignment-baseline", "middle" )
                 .attr( "fill", "white" );
 
-            x += label.node().offsetWidth + radius * 3 + 4;
-        })
+            x += direction == HORIZONTAL 
+                ? label.node().offsetWidth + radius * 3 + 4
+                : 0;
 
+            y += direction == VERTICAL
+                ? label.node().offsetHeight + radius + 4
+                : 0;
+        })
     }
 
-    function getset ( key ) {
+    function getset ( options, key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
-                return this[ key ];
+                return options[ key ];
             }
 
-            this[ key ] = value;
+            options[ key ] = value;
             return this;
         }
     }
