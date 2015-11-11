@@ -120,8 +120,8 @@
         slices.exit().remove();
         slices.enter().append( "path" )
             .each( function () {
-                this.addEventListener( "mouseenter", mouseEnter( summary ) )
-                this.addEventListener( "mouseleave", mouseLeave( summary ) )
+                this.addEventListener( "mouseenter", mouseEnter( svg ) )
+                this.addEventListener( "mouseleave", mouseLeave( svg ) )
             })
         slices
             .attr( "data-pie-slice", function ( d ) {
@@ -131,16 +131,19 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-
     }
 
-    function mouseEnter( summary ) {
+    function mouseEnter( svg ) {
         return function ( ev ) {
             var datum = d3.select( this ).datum();
+            var summary = svg.selectAll( "g[data-pie-summary]" )
+                .data( [ datum ] )
+            summary.enter().append( "g" )
+                .attr( "data-pie-summary", "" )
+                .attr( "transform", "translate(" + ( svg.node().offsetWidth - 200 ) + ",0)" )
             summary
-                .datum( [ datum ] )
+                .datum([ datum ])
                 .call( color.numbers() )
-
 
             var slice = this;
             var parent = d3.select( slice.parentNode );
@@ -155,9 +158,9 @@
 
     function mouseLeave( summary ) {
         return function ( ev ) {
-            summary
-                .datum( [] )
-                .call( color.numbers() )
+            // summary
+            //     .datum( [] )
+            //     .call( color.numbers() )
             var parent = d3.select( this.parentNode );
             parent.selectAll( "path[data-pie-slice]" )
                 .transition()

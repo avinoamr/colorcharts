@@ -32,8 +32,6 @@
             return { k: d[ that.key() ], v: d[ that.value() ] }
         })
 
-        console.log( data );
-
         var numbers = el.selectAll( "g[data-numbers]" )
             .data( data );
         numbers.exit().remove()

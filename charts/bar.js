@@ -133,7 +133,7 @@
             y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
         }
 
-        // start bars
+        // draw the bars
         var groups = svg.selectAll( "g[data-bar-group]" )
             .data( data );
         groups.exit().remove();
@@ -178,8 +178,8 @@
                 return c( d.key );
             })
             .each( function () {
-                this.addEventListener( "mouseenter", mouseEnter )
-                this.addEventListener( "mouseleave", mouseLeave )
+                this.addEventListener( "mouseenter", mouseEnter( svg ) )
+                this.addEventListener( "mouseleave", mouseLeave( svg ) )
             })
 
         rects
@@ -200,16 +200,20 @@
             })
     }
 
-    function mouseEnter ( ev ) {
-        d3.select( this )
-            .transition()
-            .style( "opacity", .7 )
+    function mouseEnter ( svg ) {
+        return function () {
+            d3.select( this )
+                .transition()
+                .style( "opacity", .7 )
+        }
     }
 
-    function mouseLeave ( ev ) {
-        d3.select( this )
-            .transition()
-            .style( "opacity", 1 )
+    function mouseLeave ( svg ) {
+        return function () {
+            d3.select( this )
+                .transition()
+                .style( "opacity", 1 )
+        }
     }
 
     function xlabels ( x, y ) {
