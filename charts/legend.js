@@ -48,7 +48,7 @@
             .map( function ( d ) { return d.values[ 0 ] } );
 
         var palette = that.palette();
-        var allc = data.map( function ( d ) { return d.key } );
+        var allc = data.map( function ( d ) { return d.c } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
             .range( [ palette.from, palette.to ] );
