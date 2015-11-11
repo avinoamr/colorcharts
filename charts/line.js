@@ -1,15 +1,10 @@
 (function () {
     var color = window.color;
-    var ZERO = 0;
-    var MINIMUM = "minimum";
-    var STACK = "stack";
-    var STREAM = "stream";
-
     color.line = function () {
         var options = {
             x: null,
             y: null,
-            baseline: ZERO,
+            stack: false,
             color: null,
             palette: window.color.palettes.default,
             data: null,
@@ -21,7 +16,7 @@
         function line ( el ) { return line.draw( bar, el ) }
         line.x = getset( options, "x" );
         line.y = getset( options, "y" );
-        line.baseline = getset( options, "baseline" );
+        line.stack = getset( options, "stack" );
         line.color = getset( options, "color" );
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
@@ -155,11 +150,10 @@
         }
 
         // stack the data
-        var stack = that.baseline() == STACK || that.baseline() == STREAM;
         d3.layout.stack()
             .values( function ( d ) { 
                 return d.values
-            })( stack ? data : [] );
+            })( that.stack() ? data : [] );
 
         // build the scales
         var x = ( isTimeline ? d3.time.scale() : d3.scale.linear() )
@@ -253,7 +247,7 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-            .style( "opacity", stack ? .4 : .1 );
+            .style( "opacity", that.stack() ? .4 : .1 );
 
         var points = groups.selectAll( "circle[data-line-point]" )
             .data( function ( d ) { 
