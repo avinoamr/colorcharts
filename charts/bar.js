@@ -121,15 +121,12 @@
             && that.color() != that.x0()
             && that.color() != that.x1();
         var legend = svg.selectAll( "g[data-bar-legend]" )
-            .data( legend ? [ colors ] : [] )
+            .data( true || legend ? [ colors ] : [] )
         legend.exit().remove();
         legend.enter().append( "g" )
             .attr( "data-bar-legend", "" )
             .attr( "transform", "translate(35,10)" )
-        that.legend()
-            .palette( palette )
-            .data( colors )
-            .draw( legend )
+        legend.call( that.legend().palette( palette ) );
         legend = legend.node()
         if ( legend ) {
             var height = legend.getBBox().height;

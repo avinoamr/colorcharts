@@ -186,16 +186,12 @@
         legend.enter().append( "g" )
             .attr( "data-line-legend", "" )
             .attr( "transform", "translate(35,10)" )
-        that.legend()
-            .palette( palette )
-            .data( data )
-            .draw( legend )
+        legend.call( that.legend().palette( palette ) );
         legend = legend.node()
         if ( legend ) {
             var height = legend.getBBox().height;
             y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
         }
-
 
         // start drawing
         var axis = svg.selectAll( "g[data-line-axis='x']" )

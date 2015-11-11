@@ -12,7 +12,7 @@
             direction: HORIZONTAL
         }
 
-        function legend ( el ) { return legend.draw( bar, el ) }
+        function legend ( el ) { return legend.draw( el ) }
         legend.value = getset( options, "value" );
         legend.color = getset( options, "color" );
         legend.palette = getset( options, "palette" );
@@ -28,11 +28,16 @@
 
     function draw ( that, el ) {
 
+        // read the data, either from the legend or the element
+        var data = that.data() || el.datum();
+
         // extract the values for each obj
         var radius = 6;
-        var data = that.data().map( function ( d ) {
+        var data = data.map( function ( d ) {
             return { v: d[ that.value() ], c: d[ that.color() ], obj: d }
         })
+
+        console.log( data );
 
         var palette = that.palette();
         var allc = data.map( function ( d ) { return d.c } );

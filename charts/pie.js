@@ -91,17 +91,15 @@
             .outerRadius( radius )
             .innerRadius( 0 );
 
-        // start drawing
+        // draw the legend
         var legend = svg.selectAll( "g[data-pie-legend]" )
             .data( [ data ] );
         legend.enter().append( "g" )
             .attr( "data-pie-legend", "" )
-        legend.attr( "transform", "translate(35,10)" )
-        that.legend()
-            .data( data )
-            .palette( that.palette() )
-            .draw( legend );
+            .attr( "transform", "translate(35,10)" )
+        legend.call( that.legend().palette( palette ) );
 
+        // start drawing
         var pies = svg.selectAll( "g[data-pie]" )
             .data( [ data ] );
         pies.enter().append( "g" )
