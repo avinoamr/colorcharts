@@ -21,7 +21,7 @@
         bar.color = getset( options, "color" );
         bar.palette = getset( options, "palette" );
         bar.data = getset( options, "data" );
-        bar.legend = function () { return options.legend }
+        bar.legend = getset( options, "legend" );
         bar.draw = function ( el ) {
             draw( this, el );
             return this;

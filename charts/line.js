@@ -20,7 +20,7 @@
         line.color = getset( options, "color" );
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
-        line.legend = function () { return options.legend }
+        line.legend = getset( options, "legend" );
         line.draw = function ( el ) {
             draw( this, el );
             return this;

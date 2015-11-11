@@ -6,6 +6,10 @@
             color: null,
             palette: window.color.palettes.default,
             data: null,
+            legend: color.legend()
+                .color( "key" )
+                .value( "key" )
+                .direction( "vertical" )
         }
 
         function pie ( el ) { return pie.draw( bar, el ) }
@@ -13,6 +17,7 @@
         pie.color = getset( options, "color" );
         pie.palette = getset( options, "palette" );
         pie.data = getset( options, "data" );
+        pie.legend = getset( options, "legend" );
         pie.draw = function ( el ) {
             draw( this, el );
             return this;
@@ -92,11 +97,8 @@
         legend.enter().append( "g" )
             .attr( "data-pie-legend", "" )
         legend.attr( "transform", "translate(35,10)" )
-        color.legend()
+        that.legend()
             .data( data )
-            .color( "key" )
-            .value( "key" )
-            .direction( "vertical" )
             .palette( that.palette() )
             .draw( legend );
 

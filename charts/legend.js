@@ -51,7 +51,7 @@
 
         // debugger;
         groups = groups.data( data )
-        // groups.exit().remove();
+        groups.exit().remove();
         groups.enter().append( "g" )
             .attr( "data-legend-group", function ( d ) { 
                 return d.v 
