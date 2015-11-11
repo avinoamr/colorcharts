@@ -46,7 +46,7 @@
             var x = d[ that.x() ];
             var y = +d[ that.y() ];
 
-            if ( !( x instanceof Date ) || isNaN( +x ) ) {
+            if ( !( x instanceof Date ) && isNaN( +x ) ) {
                 throw new Error( "x-dimension must be a number or a Date" );
             }
 
