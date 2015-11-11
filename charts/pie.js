@@ -22,12 +22,13 @@
     }
 
     function draw( that, el ) {
-        var svg = d3.select( el )
-            .select( "svg" );
+        el = d3.select( el );
+        var svg = el.select( "svg" );
 
-        if ( !svg.node() ) {
-            svg = d3.select( el )
-                .append( "svg" )
+        if ( !svg.node() || svg.attr( "data-color" ) != "chart-pie" ) {
+            el.node().innerHTML = "<svg></svg>";
+            svg = el.select( "svg" )
+                .attr( "data-color", "chart-pie" )
                 .style( "height", "100%" )
                 .style( "width", "100%" );
         }
