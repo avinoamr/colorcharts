@@ -83,7 +83,7 @@
                 var minx = d3.min( data, function ( d ) { return d.x } );
                 if ( minx != xExtent[ 0 ] ) {
                     data.unshift( 
-                        { x: minx, y: 0, y0: 0 }, 
+                        { x: minx - 0, y: 0, y0: 0 }, 
                         { x: xExtent[ 0 ], y: 0, y0: 0 }
                     );
                 }
@@ -93,7 +93,7 @@
                 var maxx = d3.max( data, function ( d ) { return d.x } );
                 if ( maxx != xExtent[ 1 ] ) {
                     data.push( 
-                        { x: maxx, y: 0, y0: 0 }, 
+                        { x: maxx + 0, y: 0, y0: 0 }, 
                         { x: xExtent[ 1 ], y: 0, y0: 0 }
                     )
                 }
@@ -118,29 +118,43 @@
             .values( function ( d ) { return d.values || d } )
             .entries( data );
 
-        var xAll = leaves.map( function ( d ) { return d.x });
+        // algorithm:
+        // 1.
+        // 3. Otherwise, add a new artificial point at that x-coordinate by 
+        //  interpolating between the two closest points 
 
-        data.map( function ( d ) {
-            return d.values;
-        })
-        .forEach( function ( data ) {
-            xAll.forEach( function ( x ) {
-                var closest = data.reduce( function ( closest, d, i ) {
-                    return d.x > x ? closest : { x: d.x, y: d.y, i: i };
-                }, { x: data[ 0 ].x, y: data[ 0 ].y, i: 0 } );
+        // iterate over all array-indices, until we reach an index where none of 
+        // the data items have a value for - thus reaching the end.
+        var i = -1, ix;
+        for ( i = 0 ; ; i += 1 ) {
+            // compute the minimal x-value that should be associated with this 
+            // array-index
+            ix = d3.min( data, function ( d ) { 
+                return ( d.values[ i ] || {} ).x 
+            });
 
-                if ( x == closest.x ) return; 
-                var after = data[ closest.i + 1 ];
+            // if no values exist for this array-index, on all lines, we're done
+            if ( typeof ix == "undefined" ) { break }
 
-                var total = after.x - closest.x;
-                var part = x - closest.x;
+            // ensure that all values contains the same x-coordinate on this 
+            // array-index
+            data.forEach( function ( d ) {
+                var d1 = d.values[ i ];
 
-                var y = d3.interpolate( closest.y, after.y )( part / total );
-                data.splice( closest.i + 1, 0, { x: x, y: y, y0: 0 } )
+                if ( d1.x == ix ) return;
+
+                // incorrect x-coordinate for this array-index, add an 
+                // artificial point as the interpolation between the current
+                // point, and the previous one.
+                var d0 = d.values[ i - 1 ];
+                var total = d1.x - d0.x;
+                var part = ix - d0.x;
+                var y = d3.interpolate( d0.y, d1.y )( part / total );
+                d.values.splice( i, 0, { x: ix, y: y, y0: 0 } )
             })
-        })
+        }
 
-        // stacke the data
+        // stack the data
         d3.layout.stack()
             .values( function ( d ) { 
                 return d.values
