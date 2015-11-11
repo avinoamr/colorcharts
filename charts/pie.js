@@ -87,10 +87,10 @@
             .innerRadius( 0 );
 
         // start drawing
-        var legend = svg.selectAll( "g[data-legend]" )
+        var legend = svg.selectAll( "g[data-pie-legend]" )
             .data( [ data ] );
         legend.enter().append( "g" )
-            .attr( "data-legend", "" )
+            .attr( "data-pie-legend", "" )
         legend.attr( "transform", function () {
             return "translate(35,10)"
         })
@@ -102,20 +102,20 @@
             .palette( that.palette() )
             .draw( legend );
 
-        var pie = svg.selectAll( "g[pie]" )
+        var pies = svg.selectAll( "g[data-pie]" )
             .data( [ data ] );
-        pie.enter().append( "g" )
+        pies.enter().append( "g" )
             .attr( "data-pie", "" )
             .attr( "transform", function () {
                 return "translate(" + ( width / 2 ) + "," + ( height / 2 ) + ")";
             });
 
-        var slices = pie.selectAll( "path[data-slice]" )
+        var slices = pies.selectAll( "path[data-pie-slice]" )
             .data( function ( d ) { return d } );
         slices.exit().remove();
         slices.enter().append( "path" )
         slices
-            .attr( "data-slice", function ( d ) {
+            .attr( "data-pie-slice", function ( d ) {
                 return d.key;
             })
             .attr( "d", arc )

@@ -174,20 +174,20 @@
             .y( function ( d ) { return y( d.y0 + d.y ) })
 
         // start drawing
-        var axis = svg.selectAll( "g[data-axis='x']" )
+        var axis = svg.selectAll( "g[data-line-axis='x']" )
             .data( [ data ] )
 
         axis.enter().append( "g" )
-            .attr( "data-axis", "x" )
+            .attr( "data-line-axis", "x" )
             .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
 
         axis.call( xlabels( x, y ) )
 
-        var groups = svg.selectAll( "g[data-group]" )
+        var groups = svg.selectAll( "g[data-line-group]" )
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
-        groups.attr( "data-group", function ( d ) {
+        groups.attr( "data-line-group", function ( d ) {
             return d.key;
         })
 
@@ -205,11 +205,11 @@
                 return c( d.key );
             });
 
-        var areas = groups.selectAll( "path[data-area]" )
+        var areas = groups.selectAll( "path[data-line-area]" )
             .data( function ( d ) { return [ d ] } );
         areas.exit().remove()
         areas.enter().append( "path" )
-            .attr( "data-area", "" )
+            .attr( "data-line-area", "" )
             .attr( "stroke", "none" )
         areas
             .attr( "d", function ( d ) { 
@@ -220,7 +220,7 @@
             })
             .style( "opacity", that.stack() ? .4 : .1 );
 
-        var points = groups.selectAll( "circle[data-point]" )
+        var points = groups.selectAll( "circle[data-line-point]" )
             .data( function ( d ) { 
                 // only show the points that were included in the original 
                 // dataset, excluding the ones that were generated to draw the 
@@ -229,7 +229,7 @@
             })
         points.exit().remove()
         points.enter().append( "circle" )
-            .attr( "data-point", "" )
+            .attr( "data-line-point", "" )
             .attr( "r", 2 )
 
         points
@@ -240,7 +240,7 @@
                 return y( d.y0 + d.y );
             })
             .attr( "fill", function ( d ) {
-                var key = this.parentNode.getAttribute( "data-group" );
+                var key = this.parentNode.getAttribute( "data-line-group" );
                 return c( key );
             })
     }

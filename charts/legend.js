@@ -26,7 +26,7 @@
         return legend;
     }
 
-    function draw( that, el ) {
+    function draw ( that, el ) {
 
         // extract the values for each obj
         var radius = 6;
@@ -47,11 +47,14 @@
         var c = palette.from && palette.to ? clin : cord;
 
         // start drawing
-        var groups = el.selectAll( "g[data-group]" )
-            .data( data )
-        groups.exit().remove();
+        var groups = el.selectAll( "g[data-legend-group]" )
+
+        // debugger;
+        groups = groups.data( data )
+        // groups.exit().remove();
         groups.enter().append( "g" )
-            .attr( "data-group", function ( d ) { 
+            .attr( "data-legend-group", function ( d ) { 
+                console.log( "HERE?2" );
                 return d.v 
             });
 

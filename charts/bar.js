@@ -110,12 +110,30 @@
 
         var c = palette.from && palette.to ? clin : cord;
 
-        // start drawing
-        var groups = svg.selectAll( "g[data-group]" )
+        // draw the legend
+        // only if there's more than 1 color, and we don't show the labels on
+        // the group (x0) and bar (x1)
+        var legend = c.domain().length > 1
+            && that.color() != that.x0()
+            && that.color() != that.x1();
+        var legend = svg.selectAll( "g[data-bar-legend]" )
+            .data( legend ? [ colors ] : [] )
+        legend.exit().remove();
+        legend.enter().append( "g" )
+            .attr( "data-bar-legend", "" )
+        color.legend()
+            .value( "key" )
+            .color( "key" )
+            .palette( palette )
+            .data( colors )
+            .draw( legend )
+
+        // start bars
+        var groups = svg.selectAll( "g[data-bar-group]" )
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
-            .attr( "data-group", function ( d ) {
+            .attr( "data-bar-group", function ( d ) {
                 return d.key;
             })
             .attr( "transform", function ( d ) {
@@ -144,11 +162,11 @@
                 return "translate(" + x1( d.key ) + ",0)";
             })
 
-        var rects = bars.selectAll( "rect[data-color]" )
+        var rects = bars.selectAll( "rect[data-bar-color]" )
             .data( function ( d ) { return d.values } );
         rects.exit().remove();
         rects.enter().append( "rect" )
-            .attr( "data-color", function ( d ) {
+            .attr( "data-bar-color", function ( d ) {
                 return d.key;
             })
             .attr( "fill", function ( d ) {
