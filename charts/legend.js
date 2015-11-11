@@ -28,6 +28,10 @@
 
     function draw ( that, el ) {
 
+        if ( !el.node() ) {
+            return; // no parent
+        }
+
         // read the data, either from the legend or the element
         var data = that.data() || el.datum();
 
@@ -37,10 +41,14 @@
             return { v: d[ that.value() ], c: d[ that.color() ], obj: d }
         })
 
-        console.log( data );
+        // deduplication
+        data = d3.nest()
+            .key( function ( d ) { return d.c } )
+            .entries( data )
+            .map( function ( d ) { return d.values[ 0 ] } );
 
         var palette = that.palette();
-        var allc = data.map( function ( d ) { return d.c } );
+        var allc = data.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
             .range( [ palette.from, palette.to ] );
@@ -53,13 +61,11 @@
 
         // start drawing
         var groups = el.selectAll( "g[data-legend-group]" )
-
-        // debugger;
         groups = groups.data( data )
         groups.exit().remove();
         groups.enter().append( "g" )
             .attr( "data-legend-group", function ( d ) { 
-                return d.v 
+                return d.v;
             });
 
         // we have to process each legend separately in order to compute the 

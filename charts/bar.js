@@ -121,7 +121,7 @@
             && that.color() != that.x0()
             && that.color() != that.x1();
         var legend = svg.selectAll( "g[data-bar-legend]" )
-            .data( true || legend ? [ colors ] : [] )
+            .data( legend ? [ colors ] : [] )
         legend.exit().remove();
         legend.enter().append( "g" )
             .attr( "data-bar-legend", "" )
