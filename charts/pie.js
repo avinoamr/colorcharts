@@ -91,6 +91,13 @@
             .outerRadius( radius )
             .innerRadius( 0 );
 
+        // summary
+        var summary = svg.selectAll( "g[data-pie-summary]" )
+            .data( [ data ] )
+        summary.enter().append( "g" )
+            .attr( "data-pie-summary", "" )
+            .attr( "transform", "translate(" + ( width - 200 ) + ",0)" );
+
         // draw the legend
         var legend = svg.selectAll( "g[data-pie-legend]" )
             .data( [ data ] );
@@ -112,6 +119,10 @@
             .data( function ( d ) { return d } );
         slices.exit().remove();
         slices.enter().append( "path" )
+            .each( function () {
+                this.addEventListener( "mouseenter", mouseEnter( summary ) )
+                this.addEventListener( "mouseleave", mouseLeave( summary ) )
+            })
         slices
             .attr( "data-pie-slice", function ( d ) {
                 return d.key;
@@ -120,6 +131,38 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
+
+    }
+
+    function mouseEnter( summary ) {
+        return function ( ev ) {
+            var datum = d3.select( this ).datum();
+            summary
+                .datum( [ datum ] )
+                .call( color.numbers() )
+
+
+            var slice = this;
+            var parent = d3.select( slice.parentNode );
+            parent.selectAll( "path[data-pie-slice]" )
+                .each( function () {
+                    d3.select( this )
+                        .transition()
+                        .style( "opacity", this == slice ? 1 : .8 )
+                })
+        }
+    }
+
+    function mouseLeave( summary ) {
+        return function ( ev ) {
+            summary
+                .datum( [] )
+                .call( color.numbers() )
+            var parent = d3.select( this.parentNode );
+            parent.selectAll( "path[data-pie-slice]" )
+                .transition()
+                .style( "opacity", 1 );
+        }
     }
 
     function getset ( options, key ) {

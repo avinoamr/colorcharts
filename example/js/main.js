@@ -2,7 +2,7 @@ window.onload = function () {
     var el = document.querySelector( "#chart" );
     var chart;
 
-    setTimeout( drawLine );
+    setTimeout( drawPie );
 
     var js = ace.edit( "js" )
     js.setTheme( "ace/theme/monokai" );
