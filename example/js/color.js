@@ -1,14 +1,5 @@
 (function () {
-    window.color = function color( element ) {
-        return {
-            bar: function () {
-                return color.bar( element )
-            },
-            line: function () {
-                return color.line( element );
-            }
-        }
-    }
+    window.color = {}
 })();
 (function () {
     var color = window.color;
@@ -69,69 +60,68 @@
 })();
 (function() {
     var color = window.color;
-    color.bar = function ( el ) {
-        var bar = d3.select( el ).data()[ 0 ];
-
-        if ( !( bar instanceof Bar ) ) {
-            var bar = new Bar( el );
-            d3.select( el ).data( [ bar ] );
+    color.bar = function () {
+        var options = {
+            x0: null,
+            x1: null,
+            y: null,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
         }
-        
+
+        function bar ( el ) { return bar.draw( bar, el ) }
+        bar.x = getset( options, "x0" );
+        bar.x0 = getset( options, "x0" );
+        bar.x1 = getset( options, "x1" );
+        bar.y = getset( options, "y" );
+        bar.color = getset( options, "color" );
+        bar.palette = getset( options, "palette" );
+        bar.data = getset( options, "data" );
+        bar.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
         return bar;
     }
 
-    function Bar( el ) {
-        this._el = el;
-        el.innerHTML = "<svg></svg>";
-    }
+    function draw( that, el ) {
+        el = d3.select( el );
+        var svg = el.select( "svg" );
 
-    Bar.prototype._x1 = "";
-    Bar.prototype._color = "";
-    Bar.prototype._palette = window.color.palettes.default;
-
-    Bar.prototype.data = autodraw( getset( "_data" ) );
-    Bar.prototype.x0 = autodraw( getset( "_x0" ) );
-    Bar.prototype.x1 = autodraw( getset( "_x1" ) );
-    Bar.prototype.x = alias( "x0" );
-    Bar.prototype.y = autodraw( getset( "_y" ) );
-    Bar.prototype.color = autodraw( getset( "_color" ) );
-    Bar.prototype.palette = autodraw( getset( "_palette" ) );
-
-    // draw once
-    Bar.prototype.draw = function () {
-        if ( !this._drawing ) {
-            this._drawing = setTimeout( this._draw.bind( this ), 0 );
+        if ( !svg.node() || svg.attr( "data-color" ) != "chart-bar" ) {
+            el.node().innerHTML = "<svg></svg>";
+            svg = el.select( "svg" )
+                .attr( "data-color", "chart-bar" )
+                .style( "height", "100%" )
+                .style( "width", "100%" );
         }
-        return this;
-    }
 
-    // actual drawing
-    Bar.prototype._draw = function () {
-        clearTimeout( this._drawing );
-        delete this._drawing;
-        draw( this );
-        return this;
-    }
+        // extract the values for each obj
+        var data = that.data().map( function ( d ) {
+            var y = +d[ that.y() ];
+            if ( isNaN( y ) ) {
+                throw new Error( "y-dimension must be a number" );
+            }
 
-    function draw( that ) {
-        var svg = d3.select( that._el )
-            .select( "svg" )
-            .style( "height", "100%" )
-            .style( "width", "100%" );
-
-        var _x0 = that._x0, _x1 = that._x1, _c = that._color, _y = that._y;
+            return { 
+                x0: d[ that.x0() ], x1: d[ that.x1() ], c: d[ that.color() ],
+                y: y, y0: 0, obj: d 
+            }
+        })
 
         // build the groups tree
         data = d3.nest()
-            .key( function ( d ) { return d[ _x0 ] || "" } )
-            .key( function ( d ) { return d[ _x1 ] || "" } )
-            .key( function ( d ) { return d[ _c ]  || "" } )
+            .key( function ( d ) { return d.x0 || "" } )
+            .key( function ( d ) { return d.x1 || "" } )
+            .key( function ( d ) { return d.c  || "" } )
             .rollup( function ( data ) {
                 return data.reduce( function ( v, d ) {
-                    return { y: v.y + d[ _y ], y0: 0 };
-                }, { y: 0 } )
+                    return { y: v.y + d.y, y0: 0 };
+                }, { y: 0, y0: 0 } )
             })
-            .entries( that._data );
+            .entries( data );
 
         // extract the colors and bars from the data tree
         var bars = color.tree.dfs()
@@ -166,18 +156,19 @@
         var ally = colors.map( function ( d ) { return d.values.y + d.values.y0 } );
         var y = d3.scale.linear()
             .domain([ 0, d3.max( ally ) ])
-            .rangeRound([ 0, svg.node().offsetHeight ] );
+            .rangeRound([ svg.node().offsetHeight, 0 ] );
 
+        var palette = that.palette();
         var allc = colors.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
-            .range( [ that._palette.from, that._palette.to ] );
+            .range( [ palette.from, palette.to ] );
 
         var cord = d3.scale.ordinal()
             .domain( allc )
-            .range( that._palette )
+            .range( palette )
 
-        var c = that._palette.from && that._palette.to ? clin : cord;
+        var c = palette.from && palette.to ? clin : cord;
 
         // start drawing
         var groups = svg.selectAll( "g[data-group]" )
@@ -195,9 +186,7 @@
             .call( xlabels( x0, y ) )
             .transition()
             .attr( "transform", function ( d ) {
-                var x = x0( d.key );
-                var y = 0;
-                return "translate(" + x + "," + y + ")";
+                return "translate(" + x0( d.key ) + ",0)";
             })
 
         var bars = groups.selectAll( "g[data-bar]" )
@@ -233,10 +222,12 @@
         rects
             .transition()
             .attr( "y", function ( d ) {
-                return y.range()[ 1 ] - y( d.values.y ) - y( d.values.y0 )
+                // start at the baseline + the height
+                return y( d.values.y + d.values.y0 );
             })
             .attr( "height", function ( d ) {
-                return y( d.values.y );
+                // height is end - start (as it's defined in y)
+                return y( d.values.y0 ) - y( d.values.y + d.values.y0 );
             })
             .attr( "width", function ( d ) {
                 return x1.rangeBand()
@@ -273,7 +264,7 @@
                 .style( "fill", "white" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", function ( d ) {
-                    return "translate(" + w + "," + ( h - 3 ) + ")"
+                    return "translate(" + w + "," + ( y.range()[ 0 ] - 3 ) + ")"
                 })
 
             // side-effect: modify the y-range to leave space for the label
@@ -283,33 +274,20 @@
 
             maxh += maxh ? 4 : 0;
             y.rangeRound([ 
-                y.range()[ 0 ] + maxh, 
+                y.range()[ 0 ] - maxh, 
                 y.range()[ 1 ] 
             ])
         }
     }
 
-    function getset ( key ) {
+    function getset ( options, key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
-                return this[ key ];
+                return options[ key ];
             }
 
-            this[ key ] = value;
+            options[ key ] = value;
             return this;
-        }
-    }
-
-    function autodraw ( fn ) {
-        return function () {
-            var rv = fn.apply( this, arguments );
-            return rv == this ? this.draw() : rv;
-        }
-    }
-
-    function alias ( name ) {
-        return function () {
-            return this[ name ].apply( this, arguments );
         }
     }
 
@@ -317,34 +295,32 @@
 })();
 (function () {
     var color = window.color;
-    color.line = function ( el ) {
-        var line = d3.select( el ).data()[ 0 ];
+    color.legend = function ( el ) {
+        var legend = d3.select( el ).data()[ 0 ];
 
-        if ( !( line instanceof Line ) ) {
-            var line = new Line( el );
-            d3.select( el ).data( [ line ] );
+        if ( !( legend instanceof Legend ) ) {
+            var legend = new Legend( el );
+            d3.select( el ).data( [ legend ] );
         }
         
-        return line;
+        return legend;
     }
 
-    function Line( el ) {
+    function Legend( el ) {
         this._el = el;
         el.innerHTML = "<svg></svg>";
     }
 
-    Line.prototype._palette = window.color.palettes.default;;
-    Line.prototype._stack = false;
+    Legend.prototype._palette = window.color.palettes.default;;
+    Legend.prototype._color = null;
 
-    Line.prototype.data = autodraw( getset( "_data" ) );
-    Line.prototype.x = autodraw( getset( "_x" ) );
-    Line.prototype.y = autodraw( getset( "_y" ) );
-    Line.prototype.stack = autodraw( getset( "_stack" ) );
-    Line.prototype.color = autodraw( getset( "_color" ) );
-    Line.prototype.palette = autodraw( getset( "_palette" ) );
+    Legend.prototype.data = getset( "_data" );
+    Legend.prototype.value = getset( "_value" );
+    Legend.prototype.color = getset( "_color" );
+    Legend.prototype.palette = getset( "_palette" );
 
     // draw once
-    Line.prototype.draw = function () {
+    Legend.prototype.draw = function () {
         if ( !this._drawing ) {
             this._drawing = setTimeout( this._draw.bind( this ), 0 );
         }
@@ -352,7 +328,7 @@
     }
 
     // actual drawing
-    Line.prototype._draw = function () {
+    Legend.prototype._draw = function () {
         clearTimeout( this._drawing );
         delete this._drawing;
         draw( this );
@@ -366,22 +342,135 @@
             .style( "height", "100%" )
             .style( "width", "100%" );
 
-        var _x = that._x, _c = that._color, _y = that._y;
+        var radius = 6;
+        var _v = that._value, _c = that._color;
 
         // extract the values for each obj
         var data = that._data.map( function ( d ) {
-            var x = d[ _x ];
-            var y = d[ _y ];
+            return { v: d[ _v ], c: d[ _c ], obj: d }
+        })
+
+        var allc = data.map( function ( d ) { return d.key } );
+        var clin = d3.scale.linear()
+            .domain( d3.extent( allc ) )
+            .range( [ that._palette.from, that._palette.to ] );
+
+        var cord = d3.scale.ordinal()
+            .domain( allc )
+            .range( that._palette )
+
+        var c = that._palette.from && that._palette.to ? clin : cord;
+
+        // start drawing
+        var groups = svg.selectAll( "g[data-group]" )
+            .data( data )
+
+        groups.exit().remove();
+        groups.enter().append( "g" )
+            .attr( "data-group", function ( d ) { 
+                return d.v 
+            });
+
+        // we have to process each legend separately in order to compute the 
+        // width used by each group before using it to compute the x-coordinate
+        // of the next group
+        var x = 0;
+        groups.transition().each( function ( d ) {
+            var group = d3.select( this )
+                .attr( "transform", function () {
+                    return "translate(" + x + ",0)";
+                });
+
+            var circle = group.selectAll( "circle" )
+                .data( [ d ] );
+            circle.enter().append( "circle" )
+                .attr( "fill", c( d.c ) );
+            circle
+                .attr( "cx", radius )
+                .attr( "cy", radius )
+                .attr( "r", radius )
+                .attr( "fill", c( d.c ) );
+
+            var label = group.selectAll( "text" )
+                .data( [ d ] );
+            label.enter().append( "text" );
+            label
+                .text( d.v )
+                .attr( "y", radius )
+                .attr( "x", radius * 2 + 4 )
+                .attr( "alignment-baseline", "middle" )
+                .attr( "fill", "white" );
+
+            x += label.node().offsetWidth + radius * 3 + 4;
+        })
+
+    }
+
+    function getset ( key ) {
+        return function ( value ) {
+            if ( arguments.length == 0 ) {
+                return this[ key ];
+            }
+
+            this[ key ] = value;
+            return this;
+        }
+    }
+
+})();
+(function () {
+    var color = window.color;
+    color.line = function () {
+        var options = {
+            x: null,
+            y: null,
+            stack: false,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
+        }
+
+        function line ( el ) { return line.draw( bar, el ) }
+        line.x = getset( options, "x" );
+        line.y = getset( options, "y" );
+        line.stack = getset( options, "stack" );
+        line.color = getset( options, "color" );
+        line.palette = getset( options, "palette" );
+        line.data = getset( options, "data" );
+        line.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
+        return line;
+    }
+
+    function draw( that, el ) {
+        el = d3.select( el );
+        var svg = el.select( "svg" );
+
+        if ( !svg.node() || svg.attr( "data-color" ) != "chart-line" ) {
+            el.node().innerHTML = "<svg></svg>";
+            svg = el.select( "svg" )
+                .attr( "data-color", "chart-line" )
+                .style( "height", "100%" )
+                .style( "width", "100%" );
+        }
+
+        // extract the values for each obj
+        var data = that.data().map( function ( d ) {
+            var x = d[ that.x() ];
+            var y = +d[ that.y() ];
 
             if ( !( x instanceof Date ) || isNaN( +x ) ) {
                 throw new Error( "x-dimension must be a number or a Date" );
             }
 
-            if ( isNaN( +y ) ) {
+            if ( isNaN( y ) ) {
                 throw new Error( "y-dimension must be a number" );
             }
 
-            return { x: x, y: y, y0: 0, c: d[ _c ], obj: d }
+            return { x: x, y: y, y0: 0, c: d[ that.color() ], obj: d }
         })
         
         var isTimeline = ( data[ 0 ] || {} ).x instanceof Date;
@@ -403,7 +492,7 @@
                         }, items[ 0 ] );
                     })
                     .entries( data )
-                    .map( function ( d ) { return d.values });
+                    .map( function ( d ) { return d.values } );
 
                 // if this line begins after the chart's start, add a zero-
                 // height segment to precede it
@@ -467,13 +556,11 @@
             })
         })
 
-        console.log( data );
-
         // stacke the data
         d3.layout.stack()
             .values( function ( d ) { 
-                return d.values 
-            })( that._stack ? data : [] );
+                return d.values
+            })( that.stack() ? data : [] );
 
         // build the scales
         var x = ( isTimeline ? d3.time.scale() : d3.scale.linear() )
@@ -483,33 +570,28 @@
         var yExtent = d3.extent( leaves, function ( d ) { return d.y + d.y0 } );
         var y = d3.scale.linear()
             .domain( [ 0, yExtent[ 1 ] ] )
-            .range( [ 4, svg.node().offsetHeight ] );
+            .range( [ svg.node().offsetHeight, 4 ] );
 
+        var palette = that.palette();
         var allc = data.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
-            .range( [ that._palette.from, that._palette.to ] );
+            .range( [ palette.from, palette.to ] );
 
         var cord = d3.scale.ordinal()
             .domain( allc )
-            .range( that._palette )
+            .range( palette )
 
-        var c = that._palette.from && that._palette.to ? clin : cord;
+        var c = palette.from && palette.to ? clin : cord;
 
         var area = d3.svg.area()
-            .x( function ( d ) { return x( d.x ) } )
-            .y0( function ( d ) {
-                return y.range()[ 1 ] + y.range()[ 0 ] - y( d.y0 );
-            })
-            .y1( function ( d ) { 
-                return y.range()[ 1 ] - y( d.y0 + d.y ) + y.range()[ 0 ];
-            })
+            .x( function ( d ) { return x( d.x ) })
+            .y0( function ( d ) { return y( d.y0 ) })
+            .y1( function ( d ) { return y( d.y0 + d.y ) })
 
         var line = d3.svg.line()
-            .x( function ( d ) { return x( d.x ) } )
-            .y( function ( d ) { 
-                return y.range()[ 1 ] - y( d.y0 + d.y ) + y.range()[ 0 ] 
-            })
+            .x( function ( d ) { return x( d.x ) })
+            .y( function ( d ) { return y( d.y0 + d.y ) })
 
         // start drawing
         var axis = svg.selectAll( "g[data-axis='x']" )
@@ -517,7 +599,7 @@
 
         axis.enter().append( "g" )
             .attr( "data-axis", "x" )
-            .attr( "transform", "translate(0," + ( y.range()[ 1 ] - 30 ) + ")" );
+            .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
 
         axis.call( xlabels( x, y ) )
 
@@ -556,7 +638,7 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-            .style( "opacity", that._stack ? .4 : .1 );
+            .style( "opacity", that.stack() ? .4 : .1 );
 
         var points = groups.selectAll( "circle[data-point]" )
             .data( function ( d ) { 
@@ -575,7 +657,7 @@
                 return x( d.x ) 
             })
             .attr( "cy", function ( d ) {
-                return y.range()[ 1 ] - y( d.y0 + d.y ) + y.range()[ 0 ]
+                return y( d.y0 + d.y );
             })
             .attr( "fill", function ( d ) {
                 var key = this.parentNode.getAttribute( "data-group" );
@@ -609,26 +691,146 @@
                     });
 
             maxh = maxh ? maxh + 8 : 0; 
-            y.range([ y.range()[ 0 ], y.range()[ 1 ] - maxh ])
+            y.range([ 
+                y.range()[ 0 ] - maxh, 
+                y.range()[ 1 ] 
+            ])
         }
     }
 
-    function getset ( key ) {
+    function getset ( options, key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
-                return this[ key ];
+                return options[ key ];
             }
 
-            this[ key ] = value;
+            options[ key ] = value;
             return this;
         }
     }
 
-    function autodraw ( fn ) {
-        return function () {
-            var rv = fn.apply( this, arguments );
-            return rv == this ? this.draw() : rv;
+})();
+(function () {
+    var color = window.color;
+    color.pie = function () {
+        var options = {
+            value: null,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
+        }
+
+        function pie ( el ) { return pie.draw( bar, el ) }
+        pie.value = getset( options, "value" );
+        pie.color = getset( options, "color" );
+        pie.palette = getset( options, "palette" );
+        pie.data = getset( options, "data" );
+        pie.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
+        return pie;
+    }
+
+    function draw( that, el ) {
+        el = d3.select( el );
+        var svg = el.select( "svg" );
+
+        if ( !svg.node() || svg.attr( "data-color" ) != "chart-pie" ) {
+            el.node().innerHTML = "<svg></svg>";
+            svg = el.select( "svg" )
+                .attr( "data-color", "chart-pie" )
+                .style( "height", "100%" )
+                .style( "width", "100%" );
+        }
+
+        var height = svg.node().offsetHeight;
+        var width = svg.node().offsetWidth;
+        var radius = Math.min( height / 2, width / 2 ) - 10;
+
+        // extract the values for each obj
+        var data = that.data().map( function ( d ) {
+            var v = +d[ that.value() ]
+
+            if ( isNaN( v ) ) {
+                throw new Error( "value must be a number" );
+            }
+
+            return { v: v, c: d[ that.color() ], obj: d }
+        })
+
+        // group by colors
+        data = d3.nest()
+            .key( function ( d ) { return d.c  || "" } )
+            .rollup ( function ( data ) {
+                return data.reduce( function ( v, d ) {
+                    return v + d.v;
+                }, 0 )
+            })
+            .entries( data );
+
+        // lay out the pie
+        data = d3.layout.pie()
+            .sort( null )
+            .value( function ( d ) { 
+                return d.values
+            })( data )
+            .map( function ( d ) {
+                d.key = d.data.key;
+                delete d.data;
+                return d;
+            });
+
+        var palette = that.palette();
+        var allc = data.map( function ( d ) { return d.key } );
+        var clin = d3.scale.linear()
+            .domain( d3.extent( allc ) )
+            .range( [ palette.from, palette.to ] );
+
+        var cord = d3.scale.ordinal()
+            .domain( allc )
+            .range( palette )
+
+        var c = palette.from && palette.to ? clin : cord;
+
+        var arc = d3.svg.arc()
+            .outerRadius( radius )
+            .innerRadius( 0 );
+
+        // start drawing
+        var pie = svg.selectAll( "g[pie]" )
+            .data( [ data ] );
+        pie.enter().append( "g" )
+            .attr( "data-pie", "" )
+            .attr( "transform", function () {
+                return "translate(" + ( width / 2 ) + "," + ( height / 2 ) + ")";
+            });
+
+        var slices = pie.selectAll( "path[data-slice]" )
+            .data( function ( d ) { return d } );
+        slices.exit().remove();
+        slices.enter().append( "path" )
+        slices
+            .attr( "data-slice", function ( d ) {
+                return d.key;
+            })
+            .attr( "d", arc )
+            .attr( "fill", function ( d ) {
+                return c( d.key );
+            })
+    }
+
+    function getset ( options, key ) {
+        return function ( value ) {
+            if ( arguments.length == 0 ) {
+                return options[ key ];
+            }
+
+            options[ key ] = value;
+            return this;
         }
     }
 
 })();
+
