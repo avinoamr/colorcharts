@@ -8,6 +8,9 @@
             color: null,
             palette: window.color.palettes.default,
             data: null,
+            legend: color.legend()
+                .value( "key" )
+                .color( "key" )
         }
 
         function line ( el ) { return line.draw( bar, el ) }
@@ -17,6 +20,7 @@
         line.color = getset( options, "color" );
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
+        line.legend = function () { return options.legend }
         line.draw = function ( el ) {
             draw( this, el );
             return this;
@@ -172,6 +176,26 @@
         var line = d3.svg.line()
             .x( function ( d ) { return x( d.x ) })
             .y( function ( d ) { return y( d.y0 + d.y ) })
+
+        // draw the legend
+        // only if we have more than one color
+        var legend = c.domain().length > 1;
+        var legend = svg.selectAll( "g[data-line-legend]" )
+            .data( legend ? [ data ] : [] )
+        legend.exit().remove();
+        legend.enter().append( "g" )
+            .attr( "data-line-legend", "" )
+            .attr( "transform", "translate(35,10)" )
+        that.legend()
+            .palette( palette )
+            .data( data )
+            .draw( legend )
+        legend = legend.node()
+        if ( legend ) {
+            var height = legend.getBBox().height;
+            y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
+        }
+
 
         // start drawing
         var axis = svg.selectAll( "g[data-line-axis='x']" )
