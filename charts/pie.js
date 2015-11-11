@@ -1,66 +1,50 @@
 (function () {
     var color = window.color;
-    color.pie = function ( el ) {
-        var pie = d3.select( el ).data()[ 0 ];
-
-        if ( !( pie instanceof Pie ) ) {
-            var pie = new Pie( el );
-            d3.select( el ).data( [ pie ] );
+    color.pie = function () {
+        var options = {
+            value: null,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
         }
-        
+
+        function pie ( el ) { return pie.draw( bar, el ) }
+        pie.value = getset( options, "value" );
+        pie.color = getset( options, "color" );
+        pie.palette = getset( options, "palette" );
+        pie.data = getset( options, "data" );
+        pie.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
         return pie;
     }
 
-    function Pie( el ) {
-        this._el = el;
-        el.innerHTML = "<svg></svg>";
-    }
+    function draw( that, el ) {
+        var svg = d3.select( el )
+            .select( "svg" );
 
-    Pie.prototype._palette = window.color.palettes.default;;
-    Pie.prototype._color = null;
-
-    Pie.prototype.data = getset( "_data" );
-    Pie.prototype.value = getset( "_value" );
-    Pie.prototype.color = getset( "_color" );
-    Pie.prototype.palette = getset( "_palette" );
-
-    // draw once
-    Pie.prototype.draw = function () {
-        if ( !this._drawing ) {
-            this._drawing = setTimeout( this._draw.bind( this ), 0 );
+        if ( !svg.node() ) {
+            svg = d3.select( el )
+                .append( "svg" )
+                .style( "height", "100%" )
+                .style( "width", "100%" );
         }
-        return this;
-    }
-
-    // actual drawing
-    Pie.prototype._draw = function () {
-        clearTimeout( this._drawing );
-        delete this._drawing;
-        draw( this );
-        return this;
-    }
-
-
-    function draw( that ) {
-        var svg = d3.select( that._el )
-            .select( "svg" )
-            .style( "height", "100%" )
-            .style( "width", "100%" );
 
         var height = svg.node().offsetHeight;
         var width = svg.node().offsetWidth;
         var radius = Math.min( height / 2, width / 2 ) - 10;
-        var _v = that._value, _c = that._color;
 
         // extract the values for each obj
-        var data = that._data.map( function ( d ) {
-            var v = d[ _v ]
+        var data = that.data().map( function ( d ) {
+            var v = +d[ that.value() ]
 
-            if ( isNaN( +v ) ) {
+            if ( isNaN( v ) ) {
                 throw new Error( "value must be a number" );
             }
 
-            return { v: v, c: d[ _c ], obj: d }
+            return { v: v, c: d[ that.color() ], obj: d }
         })
 
         // group by colors
@@ -85,16 +69,17 @@
                 return d;
             });
 
+        var palette = that.palette();
         var allc = data.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
-            .range( [ that._palette.from, that._palette.to ] );
+            .range( [ palette.from, palette.to ] );
 
         var cord = d3.scale.ordinal()
             .domain( allc )
-            .range( that._palette )
+            .range( palette )
 
-        var c = that._palette.from && that._palette.to ? clin : cord;
+        var c = palette.from && palette.to ? clin : cord;
 
         var arc = d3.svg.arc()
             .outerRadius( radius )
@@ -123,13 +108,13 @@
             })
     }
 
-    function getset ( key ) {
+    function getset ( options, key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
-                return this[ key ];
+                return options[ key ];
             }
 
-            this[ key ] = value;
+            options[ key ] = value;
             return this;
         }
     }

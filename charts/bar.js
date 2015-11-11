@@ -1,64 +1,51 @@
 (function() {
     var color = window.color;
-    color.bar = function ( el ) {
-        var bar = d3.select( el ).data()[ 0 ];
-
-        if ( !( bar instanceof Bar ) ) {
-            var bar = new Bar( el );
-            d3.select( el ).data( [ bar ] );
+    color.bar = function () {
+        var options = {
+            x0: null,
+            x1: null,
+            y: null,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
         }
-        
+
+        function bar ( el ) { return bar.draw( bar, el ) }
+        bar.x = getset( options, "x0" );
+        bar.x0 = getset( options, "x0" );
+        bar.x1 = getset( options, "x1" );
+        bar.y = getset( options, "y" );
+        bar.color = getset( options, "color" );
+        bar.palette = getset( options, "palette" );
+        bar.data = getset( options, "data" );
+        bar.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
         return bar;
     }
 
-    function Bar( el ) {
-        this._el = el;
-        el.innerHTML = "<svg></svg>";
-    }
+    function draw( that, el ) {
+        var svg = d3.select( el )
+            .select( "svg" );
 
-    Bar.prototype._x1 = "";
-    Bar.prototype._color = "";
-    Bar.prototype._palette = window.color.palettes.default;
-
-    Bar.prototype.data = getset( "_data" );
-    Bar.prototype.x0 = getset( "_x0" );
-    Bar.prototype.x1 = getset( "_x1" );
-    Bar.prototype.x = alias( "x0" );
-    Bar.prototype.y = getset( "_y" );
-    Bar.prototype.color = getset( "_color" );
-    Bar.prototype.palette = getset( "_palette" );
-
-    // draw once
-    Bar.prototype.draw = function () {
-        if ( !this._drawing ) {
-            this._drawing = setTimeout( this._draw.bind( this ), 0 );
+        if ( !svg.node() ) {
+            svg = d3.select( el )
+                .append( "svg" )
+                .style( "height", "100%" )
+                .style( "width", "100%" );
         }
-        return this;
-    }
-
-    // actual drawing
-    Bar.prototype._draw = function () {
-        clearTimeout( this._drawing );
-        delete this._drawing;
-        draw( this );
-        return this;
-    }
-
-    function draw( that ) {
-        var svg = d3.select( that._el )
-            .select( "svg" )
-            .style( "height", "100%" )
-            .style( "width", "100%" );
 
         // extract the values for each obj
-        var data = that._data.map( function ( d ) {
-            var y = +d[ that._y ];
+        var data = that.data().map( function ( d ) {
+            var y = +d[ that.y() ];
             if ( isNaN( y ) ) {
                 throw new Error( "y-dimension must be a number" );
             }
 
             return { 
-                x0: d[ that._x0 ], x1: d[ that._x1 ], c: d[ that._color ],
+                x0: d[ that.x0() ], x1: d[ that.x1() ], c: d[ that.color() ],
                 y: y, y0: 0, obj: d 
             }
         })
@@ -110,16 +97,17 @@
             .domain([ 0, d3.max( ally ) ])
             .rangeRound([ svg.node().offsetHeight, 0 ] );
 
+        var palette = that.palette();
         var allc = colors.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
-            .range( [ that._palette.from, that._palette.to ] );
+            .range( [ palette.from, palette.to ] );
 
         var cord = d3.scale.ordinal()
             .domain( allc )
-            .range( that._palette )
+            .range( palette )
 
-        var c = that._palette.from && that._palette.to ? clin : cord;
+        var c = palette.from && palette.to ? clin : cord;
 
         // start drawing
         var groups = svg.selectAll( "g[data-group]" )
@@ -231,20 +219,14 @@
         }
     }
 
-    function getset ( key ) {
+    function getset ( options, key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
-                return this[ key ];
+                return options[ key ];
             }
 
-            this[ key ] = value;
+            options[ key ] = value;
             return this;
-        }
-    }
-
-    function alias ( name ) {
-        return function () {
-            return this[ name ].apply( this, arguments );
         }
     }
 

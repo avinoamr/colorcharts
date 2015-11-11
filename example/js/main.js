@@ -1,19 +1,8 @@
 window.onload = function () {
+    var el = document.querySelector( "#chart" );
     var chart;
 
-    // setTimeout( function () {
-    //     window.color( document.querySelector( "#chart" ) )
-    //         .legend()
-    //         .color( "color" )
-    //         .value( "value" )
-    //         .data([
-    //             { value: "hello", color: "1" },
-    //             { value: "world", color: "2" }
-    //         ])
-    //         .draw();
-    // })
-
-    setTimeout( drawBar );
+    setTimeout( drawPie );
 
     var js = ace.edit( "js" )
     js.setTheme( "ace/theme/monokai" );
@@ -45,31 +34,31 @@ window.onload = function () {
     // build the gui controls
     var gui = new dat.GUI();
     gui.obj = {
-        set value ( v ) { getChart().value( v ).draw(); generateCode() },
-        get value () { return getChart().value() },
+        set value ( v ) { chart.value( v ).draw( el ); generateCode() },
+        get value () { return chart.value() },
 
-        set x ( v ) { getChart().x( v ).draw(); generateCode() },
-        get x () { return getChart().x() },
+        set x ( v ) { chart.x( v ).draw( el ); generateCode() },
+        get x () { return chart.x() },
 
-        set x1 ( v ) { getChart().x1( v ).draw(); generateCode() },
-        get x1 () { return getChart().x1() || "" },
+        set x1 ( v ) { chart.x1( v ).draw( el ); generateCode() },
+        get x1 () { return chart.x1() || "" },
 
-        set y ( v ) { getChart().y( v ).draw(); generateCode() },
-        get y () { return getChart().y() },
+        set y ( v ) { chart.y( v ).draw( el ); generateCode() },
+        get y () { return chart.y() },
 
-        set color ( v ) { getChart().color( v ).draw(); generateCode() },
-        get color () { return getChart().color() || "" },
+        set color ( v ) { chart.color( v ).draw( el ); generateCode() },
+        get color () { return chart.color() || "" },
 
-        set stack ( v ) { getChart().stack( v ).draw(); generateCode() },
-        get stack () { return getChart().stack() || "" },
+        set stack ( v ) { chart.stack( v ).draw( el ); generateCode() },
+        get stack () { return chart.stack() || "" },
 
         set palette ( v ) {
-            getChart().palette( window.color.palettes[ v ] ).draw();
+            chart.palette( window.color.palettes[ v ] ).draw( el);
             generateCode()
         },
 
         get palette () { 
-            var palette = getChart().palette();
+            var palette = chart.palette();
             return Object.keys( window.color.palettes )
                 .filter( function ( key ) {
                     return palette == window.color.palettes[ key ];
@@ -79,40 +68,13 @@ window.onload = function () {
 
     gui.close(); // auto-close
 
-
-    function getBar() {
-        return window.color( document.querySelector( "#chart" ) )
-            .bar()
-    }
-
-    function getLine() {
-        return window.color( document.querySelector( "#chart" ) )
-            .line()
-    }
-
-    function getPie() {
-        return window.color( document.querySelector( "#chart" ) )
-            .pie()
-    }
-
-    function getChart() {
-        if ( chart == "bar" ) {
-            return getBar()
-        } else if ( chart == "line" ) {
-            return getLine();
-        } else if ( chart == "pie" ) {
-            return getPie();
-        }
-    }
-
     function run() {
         var code = "var color = window.color;\n" + js.getValue();
         eval( code );
     }
 
     function drawLine() {
-        chart = "line"
-        getLine()
+        chart = color.line()
             .x( "release date" )
             .y( "number" )
             .data([
@@ -122,7 +84,7 @@ window.onload = function () {
                 { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2, "release date": new Date( "October 14, 1994" ) },
                 { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4, "release date": new Date( "July 2, 1997" ) }
             ])
-            .draw();
+            .draw( el );
 
         while ( gui.__controllers.length ) {
             gui.remove( gui.__controllers[ 0 ] );
@@ -138,8 +100,7 @@ window.onload = function () {
     }
 
     function drawBar() {
-        chart = "bar"
-        getBar()
+        chart = color.bar()
             .x( "movie" )
             .y( "count" )
             .data([
@@ -149,7 +110,7 @@ window.onload = function () {
                 { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
                 { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
             ])
-            .draw();
+            .draw( el );
 
         while ( gui.__controllers.length ) {
             gui.remove( gui.__controllers[ 0 ] );
@@ -165,8 +126,7 @@ window.onload = function () {
     }
 
     function drawPie() {
-        chart = "pie"
-        getPie()
+        chart = color.pie()
             .value( "count" )
             .color( "movie" )
             .data([
@@ -176,7 +136,7 @@ window.onload = function () {
                 { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
                 { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
             ])
-            .draw();
+            .draw( el );
 
         while ( gui.__controllers.length ) {
             gui.remove( gui.__controllers[ 0 ] );
@@ -190,25 +150,24 @@ window.onload = function () {
     }
 
     function generateCode () {
-        var bar = getChart();
         var code = Object.keys( gui.obj )
             .filter( function ( key ) {
-                return getChart()[ key ] && !!gui.obj[ key ]; // remove defaults
+                return chart[ key ] && !!gui.obj[ key ]; // remove defaults
             })
             .filter( function ( key ) {
-                return key != "palette" || bar[ key ]() != window.color.palettes.default;
+                return key != "palette" || chart[ key ]() != window.color.palettes.default;
             })
             .reduce( function ( code, key ) {
-                var v = bar[ key ]();
+                var v = chart[ key ]();
                 v = typeof v != "string" || typeof v != "number"
                     ? JSON.stringify( v )
                     : '"' + v + '"';
 
                 code.push( '.' + key + '(' + v + ')' );
                 return code;
-            }, [ "." + chart + "()" ] );
+            }, [] );
 
-        var data = bar.data()
+        var data = chart.data()
             .map( function ( d ) { 
                 Object.keys( d )
                     .filter( function ( k ) { 
@@ -232,10 +191,10 @@ window.onload = function () {
         code = []
             .concat( code )
             .concat( '.data([', data, '])' )
-            .concat( '.draw()' )
+            .concat( '.draw(document.querySelector("#chart"))' )
             .map( function ( l ) { return "\t" + l } );
 
-        code = [ 'color(document.querySelector("#chart"))' ]
+        code = [ 'color.' + chart.name + "()" ]
             .concat( code )
             .join( "\n" ) + ";";
 

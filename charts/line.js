@@ -1,58 +1,45 @@
 (function () {
     var color = window.color;
-    color.line = function ( el ) {
-        var line = d3.select( el ).data()[ 0 ];
-
-        if ( !( line instanceof Line ) ) {
-            var line = new Line( el );
-            d3.select( el ).data( [ line ] );
+    color.line = function () {
+        var options = {
+            x: null,
+            y: null,
+            stack: false,
+            color: null,
+            palette: window.color.palettes.default,
+            data: null,
         }
-        
+
+        function line ( el ) { return line.draw( bar, el ) }
+        line.x = getset( options, "x" );
+        line.y = getset( options, "y" );
+        line.stack = getset( options, "stack" );
+        line.color = getset( options, "color" );
+        line.palette = getset( options, "palette" );
+        line.data = getset( options, "data" );
+        line.draw = function ( el ) {
+            draw( this, el );
+            return this;
+        }
+
         return line;
     }
 
-    function Line( el ) {
-        this._el = el;
-        el.innerHTML = "<svg></svg>";
-    }
+    function draw( that, el ) {
+        var svg = d3.select( el )
+            .select( "svg" );
 
-    Line.prototype._palette = window.color.palettes.default;;
-    Line.prototype._stack = false;
-
-    Line.prototype.data = getset( "_data" );
-    Line.prototype.x = getset( "_x" );
-    Line.prototype.y = getset( "_y" );
-    Line.prototype.stack = getset( "_stack" );
-    Line.prototype.color = getset( "_color" );
-    Line.prototype.palette = getset( "_palette" );
-
-    // draw once
-    Line.prototype.draw = function () {
-        if ( !this._drawing ) {
-            this._drawing = setTimeout( this._draw.bind( this ), 0 );
+        if ( !svg.node() ) {
+            svg = d3.select( el )
+                .append( "svg" )
+                .style( "height", "100%" )
+                .style( "width", "100%" );
         }
-        return this;
-    }
-
-    // actual drawing
-    Line.prototype._draw = function () {
-        clearTimeout( this._drawing );
-        delete this._drawing;
-        draw( this );
-        return this;
-    }
-
-
-    function draw( that ) {
-        var svg = d3.select( that._el )
-            .select( "svg" )
-            .style( "height", "100%" )
-            .style( "width", "100%" );
 
         // extract the values for each obj
-        var data = that._data.map( function ( d ) {
-            var x = d[ that._x ];
-            var y = +d[ that._y ];
+        var data = that.data().map( function ( d ) {
+            var x = d[ that.x() ];
+            var y = +d[ that.y() ];
 
             if ( !( x instanceof Date ) || isNaN( +x ) ) {
                 throw new Error( "x-dimension must be a number or a Date" );
@@ -62,7 +49,7 @@
                 throw new Error( "y-dimension must be a number" );
             }
 
-            return { x: x, y: y, y0: 0, c: d[ that._color ], obj: d }
+            return { x: x, y: y, y0: 0, c: d[ that.color() ], obj: d }
         })
         
         var isTimeline = ( data[ 0 ] || {} ).x instanceof Date;
@@ -152,7 +139,7 @@
         d3.layout.stack()
             .values( function ( d ) { 
                 return d.values
-            })( that._stack ? data : [] );
+            })( that.stack() ? data : [] );
 
         // build the scales
         var x = ( isTimeline ? d3.time.scale() : d3.scale.linear() )
@@ -164,16 +151,17 @@
             .domain( [ 0, yExtent[ 1 ] ] )
             .range( [ svg.node().offsetHeight, 4 ] );
 
+        var palette = that.palette();
         var allc = data.map( function ( d ) { return d.key } );
         var clin = d3.scale.linear()
             .domain( d3.extent( allc ) )
-            .range( [ that._palette.from, that._palette.to ] );
+            .range( [ palette.from, palette.to ] );
 
         var cord = d3.scale.ordinal()
             .domain( allc )
-            .range( that._palette )
+            .range( palette )
 
-        var c = that._palette.from && that._palette.to ? clin : cord;
+        var c = palette.from && palette.to ? clin : cord;
 
         var area = d3.svg.area()
             .x( function ( d ) { return x( d.x ) })
@@ -229,7 +217,7 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-            .style( "opacity", that._stack ? .4 : .1 );
+            .style( "opacity", that.stack() ? .4 : .1 );
 
         var points = groups.selectAll( "circle[data-point]" )
             .data( function ( d ) { 
@@ -289,13 +277,13 @@
         }
     }
 
-    function getset ( key ) {
+    function getset ( options, key ) {
         return function ( value ) {
             if ( arguments.length == 0 ) {
-                return this[ key ];
+                return options[ key ];
             }
 
-            this[ key ] = value;
+            options[ key ] = value;
             return this;
         }
     }
