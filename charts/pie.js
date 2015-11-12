@@ -1,5 +1,7 @@
 (function () {
     var color = window.color;
+    var getset = color.getset;
+
     color.pie = function () {
         var options = {
             value: null,
@@ -165,17 +167,6 @@
             parent.selectAll( "path[data-pie-slice]" )
                 .transition()
                 .style( "opacity", 1 );
-        }
-    }
-
-    function getset ( options, key ) {
-        return function ( value ) {
-            if ( arguments.length == 0 ) {
-                return options[ key ];
-            }
-
-            options[ key ] = value;
-            return this;
         }
     }
 

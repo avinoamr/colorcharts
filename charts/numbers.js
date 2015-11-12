@@ -1,5 +1,7 @@
 (function () {
     var color = window.color;
+    var getset = color.getset;
+    
     color.numbers = function () {
         var options = {
             data: null,
@@ -70,17 +72,6 @@
             height += key.node().offsetHeight;
             y += height + 8
         })
-    }
-
-    function getset ( options, key ) {
-        return function ( value ) {
-            if ( arguments.length == 0 ) {
-                return options[ key ];
-            }
-
-            options[ key ] = value;
-            return this;
-        }
     }
 
 })();

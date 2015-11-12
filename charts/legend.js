@@ -1,5 +1,7 @@
 (function () {
     var color = window.color;
+    var getset = color.getset;
+    
     var HORIZONTAL = "horizontal";
     var VERTICAL = "vertical";
 
@@ -107,17 +109,6 @@
                 ? label.node().offsetHeight + radius + 4
                 : 0;
         })
-    }
-
-    function getset ( options, key ) {
-        return function ( value ) {
-            if ( arguments.length == 0 ) {
-                return options[ key ];
-            }
-
-            options[ key ] = value;
-            return this;
-        }
     }
 
 })();

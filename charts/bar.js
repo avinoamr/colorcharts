@@ -1,5 +1,7 @@
 (function() {
     var color = window.color;
+    var getset = color.getset;
+
     color.bar = function () {
         var options = {
             x0: null,
@@ -244,17 +246,6 @@
                 y.range()[ 0 ] - maxh, 
                 y.range()[ 1 ] 
             ])
-        }
-    }
-
-    function getset ( options, key ) {
-        return function ( value ) {
-            if ( arguments.length == 0 ) {
-                return options[ key ];
-            }
-
-            options[ key ] = value;
-            return this;
         }
     }
 
