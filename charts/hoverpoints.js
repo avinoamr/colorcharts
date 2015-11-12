@@ -28,12 +28,14 @@
             });
         hoverpoints.draw = function ( el ) {
             el = el.node ? el.node() : el;
+            var svg = color.selectUp( el, "svg" );
 
-            if ( !el.__hoverpoints ) {
-                el.addEventListener( "mousemove", mouseMove );
+            if ( !svg.__hoverpoints ) {
+                svg.addEventListener( "mousemove", mouseMove );
             }
 
-            return el.__hoverpoints = this;
+            this._el = el;
+            return svg.__hoverpoints = this;
         }
 
         return hoverpoints;
@@ -43,10 +45,10 @@
         var rect = this.getBoundingClientRect()
         var _hoverpoints = this.__hoverpoints;
         var xs = _hoverpoints._xs;
-        var data = _hoverpoints.data();
         var x = _hoverpoints.x();
         var y = _hoverpoints.y();
         var c = _hoverpoints.color();
+        var data = _hoverpoints.data();
         var distance = _hoverpoints.distance();
         var radius = _hoverpoints.radius();
         var duration = _hoverpoints.duration();
@@ -69,34 +71,35 @@
         ci = xs[ ci1 ] - mx > mx - xs[ ci0 ] ? ci0 : ci1;
         var cx = xs[ ci ];
 
-        // filter all of the points for the given x-coordinate that are 
-        // close enough to the cursor.
+        // build the list of all points for the given x-coordinate
         // this is a much smaller dataset containing only a single x-coord
-        var points = [];
+        // side-effect: determine if any of these points are close enough to the
+        // cursor, to determine if all of the points should be highlighted or not
+        var points = [], closeEnough = false;
         for ( var i = 0 ; i < data.length ; i += 1 ) {
             var point = data[ i ].values[ ci ];
             if ( !point.obj ) {
                 continue; // not a real point
             }
 
-            var cy = y( point.y0 + point.y );
-
             // pythagoras distance between the cursor and the point
-            var dist = Math.sqrt(
-                Math.pow( Math.abs( cx - mx ), 2 ),
-                Math.pow( Math.abs( cy - my ), 2 )
-            );
+            var cy = y( point.y0 + point.y );
+            points.push({ x: cx, y: cy, c: c( data[ i ].key ) });
 
             // are we close enough?
-            if ( dist < distance ) {
-                var cc = c( data[ i ].key )
-                points.push({ x: cx, y: cy, c: cc });
-            }
+            var dx = Math.abs( cx - mx );
+            var dy = Math.abs( cy - my );
+            var dist = Math.sqrt( Math.pow( dx, 2 ) + Math.pow( dy, 2 ) );
+            closeEnough = closeEnough || dist < distance
+        }
+
+        if ( !closeEnough ) {
+            points = [];
         }
 
         // draw the points
-        var el = d3.select( this );
-        var hoverpoints = el.selectAll( "circle[data-line-hoverpoint]" )
+        var el = d3.select( _hoverpoints._el );
+        var hoverpoints = el.selectAll( "circle[data-hoverpoint]" )
             .data( points, function ( p ) { 
                 return [ p.x, p.y ].join( "-" )
             });
@@ -106,7 +109,7 @@
             .attr( "r", 0 )
             .remove();
         hoverpoints.enter().append( "circle" )
-            .attr( "data-line-hoverpoint", "" )
+            .attr( "data-hoverpoint", "" )
             .attr( "cx", function ( d ) { return d.x } )
             .attr( "cy", function ( d ) { return d.y } )
             .attr( "fill", function ( d ) { return d.c } )

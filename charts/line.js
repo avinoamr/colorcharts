@@ -287,13 +287,17 @@
                 return c( key );
             });
 
-        // build the hoverpoints behavior
+        // attach the hoverpoints behavior
+        var hoverpoints = svg.selectAll( "g[data-line-hoverpoints]" )
+            .data( [ data ] )
+        hoverpoints.enter().append( "g" )
+            .attr( "data-line-hoverpoints", "" )
         color.hoverpoints()
             .x( x )
             .y( y )
             .color( c )
             .data( data )
-            .draw( svg );
+            .draw( hoverpoints );
     }
 
     function xlabels ( x, y ) {

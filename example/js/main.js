@@ -1,6 +1,14 @@
 window.onload = function () {
     var el = document.querySelector( "#chart" );
     var chart;
+    var data = [
+        { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1, "release date": new Date( "September 17, 1999" ) },
+        { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 5, "number": 5, "release date": new Date( "May 25, 1977" ) },
+        { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8, "release date": new Date( "June 25, 1982" ) },
+        { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2, "release date": new Date( "October 14, 1994" ) },
+        { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 39, "number": 4, "release date": new Date( "July 2, 1997" ) },
+        { "movie": "Rain Man", "studio": "Universal", "genre": "Drama", "count": 27, "number": 4, "release date": new Date( "December 14, 1989" ) },
+    ]
 
     setTimeout( drawLine );
 
@@ -77,13 +85,7 @@ window.onload = function () {
         chart = color.line()
             .x( "release date" )
             .y( "number" )
-            .data([
-                { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1, "release date": new Date( "September 17, 1999" ) },
-                { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 39, "number": 5, "release date": new Date( "May 25, 1977" ) },
-                { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8, "release date": new Date( "June 25, 1982" ) },
-                { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2, "release date": new Date( "October 14, 1994" ) },
-                { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4, "release date": new Date( "July 2, 1997" ) }
-            ])
+            .data( data )
             .draw( el );
 
         while ( gui.__controllers.length ) {
@@ -103,13 +105,7 @@ window.onload = function () {
         chart = color.bar()
             .x( "movie" )
             .y( "count" )
-            .data([
-                { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1 },
-                { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 39, "number": 5 },
-                { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8 },
-                { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
-                { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
-            ])
+            .data( data )
             .draw( el );
 
         while ( gui.__controllers.length ) {
@@ -129,13 +125,7 @@ window.onload = function () {
         chart = color.pie()
             .value( "count" )
             .color( "movie" )
-            .data([
-                { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1 },
-                { "movie": "Star Wars", "studio": "Paramount", "genre": "Sci-Fi", "count": 39, "number": 5 },
-                { "movie": "Blade Runner", "studio": "Paramount", "genre": "Sci-Fi", "count": 27, "number": 8 },
-                { "movie": "Pulp Fiction", "studio": "Universal", "genre": "Drama", "count": 13, "number": 2 },
-                { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 5, "number": 4 }
-            ])
+            .data( data )
             .draw( el );
 
         while ( gui.__controllers.length ) {
