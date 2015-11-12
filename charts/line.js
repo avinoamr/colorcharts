@@ -313,14 +313,20 @@
     function interp ( d ) {
         return function ( x ) {
             var i = 0;
+
+            // find the 2 points immediately before and after the provided
+            // x-coordinate.
             while ( d.values[ i ] && d.values[ i ].x < x ) { i += 1 }
             var d1 = d.values[ i ];
             var d0 = d.values[ i - 1 ] || d1;
+
+            // interpolate between these 2 points
             var total = d1.x - d0.x;
             var part = x - d0.x;
-            var dinterpolated = d3.interpolate( d0, d1 )( part / total );
-            delete dinterpolated.obj;
-            return dinterpolated;
+            return d3.interpolate(
+                { x: d0.x, y: d0.y, y0: d0.y0 }, 
+                { x: d1.x, y: d1.y, y0: d1.y0 }
+            )( part / total );
         }
     }
 
