@@ -250,18 +250,25 @@
             .style( "opacity", that.stack() ? .4 : .1 );
 
         var points = groups.selectAll( "circle[data-line-point]" )
-            .data( function ( d ) { 
-                // only show the points that were included in the original 
-                // dataset, excluding the ones that were generated to draw the 
-                // chart
-                return d.values.filter( function ( d ) { return !!d.obj })
+            .data( function ( d ) {
+                return d.values;
             })
         points.exit().remove()
         points.enter().append( "circle" )
             .attr( "data-line-point", "" )
-            .attr( "r", 2 )
+            .attr( "fill", function ( d ) {
+                var key = this.parentNode.getAttribute( "data-line-group" );
+                return c( key );
+            })
 
         points
+            .transition()
+            .attr( "r", function ( d ) {
+                // only show the points that were included in the original 
+                // dataset, excluding the ones that were generated to draw the 
+                // chart
+                return d.obj ? 3 : 0;
+            })
             .attr( "cx", function ( d ) { 
                 return x( d.x ) 
             })
