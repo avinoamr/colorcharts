@@ -1,4 +1,8 @@
 (function () {
+    var HOVER_DISTANCE = 40;
+    var HOVER_DURATION = 50;
+    var HOVER_RADIUS = 8;
+
     var color = window.color;
     color.line = function () {
         var options = {
@@ -159,7 +163,7 @@
         var yExtent = d3.extent( leaves, function ( d ) { return d.y + d.y0 } );
         var y = d3.scale.linear()
             .domain( [ 0, yExtent[ 1 ] ] )
-            .range( [ svg.node().offsetHeight, 4 ] );
+            .range( [ svg.node().offsetHeight, HOVER_RADIUS ] );
 
         var palette = that.palette();
         var allc = data.map( function ( d ) { return d.key } );
@@ -257,16 +261,27 @@
                 return c( key );
             })
 
+        var xs = [];
+        xs.__map = {};
         points
             .transition()
             .attr( "r", function ( d ) {
                 // only show the points that were included in the original 
                 // dataset, excluding the ones that were generated to draw the 
                 // chart
-                return d.obj ? 3 : 0;
+                return d.obj ? 0 : 0;
             })
+            .attr( "stroke-width", 60 )
+            .attr( "stroke", "transparent" )
             .attr( "cx", function ( d ) { 
-                return x( d.x ) 
+                var dx = x( d.x );
+                if ( !xs.__map[ dx ] ) {
+                    xs.push( xs.__map[ dx ] = { x: dx, p: [] });
+                }
+                if ( d.obj ) {
+                    xs.__map[ dx ].p.push( this );
+                }
+                return dx;
             })
             .attr( "cy", function ( d ) {
                 return y( d.y0 + d.y );
@@ -274,7 +289,67 @@
             .attr( "fill", function ( d ) {
                 var key = this.parentNode.getAttribute( "data-line-group" );
                 return c( key );
-            });
+            })
+
+        var svgel = svg.node();
+        if ( !svgel.__roi ) {
+            svgel.__roi = behavior();
+            svgel.addEventListener( "mousemove", svgel.__roi )
+        }
+
+        svgel.__roi.xs( xs );
+
+    }
+
+    function behavior() {
+        var xs, highlighted = [];
+        var fn = function ( ev ) {
+            var mx = ev.clientX - this.getBoundingClientRect().left;
+            var my = ev.clientY - this.getBoundingClientRect().top;
+            
+            // find the closest x-point
+            var points = xs.map( function ( x ) {
+                return { x: x, diff: Math.abs( x.x - mx ) }
+            })
+            .sort( function ( x1, x2 ) {
+                return x1.diff - x2.diff;
+            })[ 0 ].x.p;
+
+            // check if we're close to any of the points
+            var highlight = points.filter( function ( p ) {
+                var cx = p.getAttribute( "cx" );
+                var cy = p.getAttribute( "cy" );
+                var dx = Math.abs( cx - mx );
+                var dy = Math.abs( cy - my );
+                var dist = Math.sqrt( Math.pow( dx, 2 ) + Math.pow( dy, 2 ) );
+                return dist < HOVER_DISTANCE;
+            }).length > 0;
+
+            if ( !highlight || highlighted != points ) {
+                d3.selectAll( highlighted )
+                    .transition()
+                    .duration( HOVER_DURATION )
+                    .attr( "r", 0 )
+                highlighted = [];
+            } 
+
+            if ( !highlight ) {
+                return;
+            }
+
+            highlighted = points;
+            d3.selectAll( points )
+                .transition()
+                .duration( HOVER_DURATION )
+                .attr( "r", HOVER_RADIUS )
+        }
+
+        fn.xs = function ( _v ) {
+            xs = _v;
+            return fn;
+        }
+
+        return fn
     }
 
     function xlabels ( x, y ) {
