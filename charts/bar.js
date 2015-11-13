@@ -70,21 +70,30 @@
             })
             .entries( data );
 
+        data = data.map( flatten )
+
+        function flatten ( d ) {
+            if ( !d.values ) return d;
+            if ( Array.isArray( d.values ) ) {
+                d.values = d.values.map( flatten );
+            }
+            d.values.key = d.key
+            return d.values;
+        }
+
         // extract the colors and bars from the data tree
         var bars = color.tree.dfs()
             .filter( function ( d, i, j ) { return j == 2 } )
-            .values( function ( d ) { return d.values || d } )
             .entries( data );
 
         var colors = color.tree.dfs()
             .filter( function ( d, i, j ) { return j == 3 } )
-            .values( function ( d ) { return d.values || d } )
             .entries( data );
 
         // stack the colors
         bars.map( function ( data ) {
-            return data.values.map( function ( d ) { 
-                return [ d.values ] 
+            return data.map( function ( d ) { 
+                return [ d ] 
             })
         })
         .forEach( d3.layout.stack() );
@@ -100,7 +109,7 @@
             .domain( allx1 )
             .rangeRoundBands( [ 0, x0.rangeBand() ], .01 )
 
-        var ally = colors.map( function ( d ) { return d.values.y + d.values.y0 } );
+        var ally = colors.map( function ( d ) { return d.y + d.y0 } );
         var y = d3.scale.linear()
             .domain([ 0, d3.max( ally ) ])
             .rangeRound([ svg.node().offsetHeight, 0 ] );
@@ -156,7 +165,7 @@
             })
 
         var bars = groups.selectAll( "g[data-bar]" )
-            .data( function ( d ) { return d.values } );
+            .data( color.identity );
         bars.exit().remove();
         bars.enter().append( "g" )
             .attr( "data-bar", function ( d ) {
@@ -168,10 +177,10 @@
             .transition()
             .attr( "transform", function ( d ) {
                 return "translate(" + x1( d.key ) + ",0)";
-            })
+            });
 
         var rects = bars.selectAll( "rect[data-bar-color]" )
-            .data( function ( d ) { return d.values } );
+            .data( color.identity );
         rects.exit().remove();
         rects.enter().append( "rect" )
             .attr( "data-bar-color", function ( d ) {
@@ -189,11 +198,11 @@
             .transition()
             .attr( "y", function ( d ) {
                 // start at the baseline + the height
-                return y( d.values.y + d.values.y0 );
+                return y( d.y + d.y0 );
             })
             .attr( "height", function ( d ) {
                 // height is end - start (as it's defined in y)
-                return y( d.values.y0 ) - y( d.values.y + d.values.y0 );
+                return y( d.y0 ) - y( d.y + d.y0 );
             })
             .attr( "width", function ( d ) {
                 return x1.rangeBand()
@@ -201,16 +210,10 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-            .each( function ( d ) {
-                console.log( d );
-            })
 
         // build the tooltip behavior
         color.tooltip()
-            .label( function ( d ) {
-                d = d.values;
-                return d.c || d.x1 || d.x0;
-            })
+            .label( "x0" )
             .draw( rects );
     }
 
