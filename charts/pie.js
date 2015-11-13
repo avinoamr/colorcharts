@@ -136,6 +136,7 @@
 
         // build the hover behavior
         color.tooltip()
+            .label( "key" )
             .draw( slices );
     }
 

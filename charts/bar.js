@@ -46,15 +46,15 @@
 
         // extract the values for each obj
         var data = that.data().map( function ( d ) {
+            var x0 = d[ that.x0() ];
+            var x1 = d[ that.x1() ];
+            var c = d[ that.color() ];
             var y = +d[ that.y() ];
             if ( isNaN( y ) ) {
                 throw new Error( "y-dimension must be a number" );
             }
 
-            return { 
-                x0: d[ that.x0() ], x1: d[ that.x1() ], c: d[ that.color() ],
-                y: y, y0: 0, obj: d 
-            }
+            return { x0: x0, x1: x1, c: c, y: y, y0: 0, obj: d }
         })
 
         // build the groups tree
@@ -64,8 +64,9 @@
             .key( function ( d ) { return d.c  || "" } )
             .rollup( function ( data ) {
                 return data.reduce( function ( v, d ) {
-                    return { y: v.y + d.y, y0: 0 };
-                }, { y: 0, y0: 0 } )
+                    v.y += d.y;
+                    return v;
+                }, data[ 0 ] )
             })
             .entries( data );
 
@@ -200,9 +201,16 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
+            .each( function ( d ) {
+                console.log( d );
+            })
 
         // build the tooltip behavior
         color.tooltip()
+            .label( function ( d ) {
+                d = d.values;
+                return d.c || d.x1 || d.x0;
+            })
             .draw( rects );
     }
 

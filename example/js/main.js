@@ -14,7 +14,7 @@ window.onload = function () {
         { "movie": "Rain Man", "studio": "Universal", "genre": "Drama", "count": 27, "number": 4, "release date": new Date( "December 14, 1989" ) },
     ]
 
-    setTimeout( drawPie );
+    setTimeout( drawBar );
 
     var js = ace.edit( "js" )
     js.setTheme( "ace/theme/monokai" );

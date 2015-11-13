@@ -1,5 +1,6 @@
 (function () {
     var color = window.color;
+    var getset = color.getset;
 
     var colorDark = {
         "extends": "dark",
@@ -15,8 +16,14 @@
     }
 
     color.tooltip = function () {
-        function tooltip ( el ) { tooltip.draw( el ) }
+        var options = {
+            value: null,
+            label: null,
+        }
 
+        function tooltip ( el ) { tooltip.draw( el ) }
+        tooltip.value = getset( options, "value" );
+        tooltip.label = getset( options, "label" );
         tooltip.draw = function ( els ) {
             var el = els.node ? els.node() : els;
             this.__svg = color.selectUp( el, "svg" )
@@ -38,8 +45,8 @@
     }
 
     function mouseEnter( d ) {
-        var tooltip = this.__tooltip;
-        var svg = tooltip.__svg;
+        var that = this.__tooltip;
+        var svg = that.__svg;
 
         if ( !svg.__tip ) {
             svg.__tip = new Opentip( this, "TEXT?", { 
@@ -49,7 +56,9 @@
             })
         }
 
-        svg.__tip.setContent( d.key );
+        var label = that.label();
+        label = typeof label == "function" ? label( d ) : d[ label ];
+        svg.__tip.setContent( label );
         svg.__tip.prepareToShow();
     }
 
