@@ -1,4 +1,8 @@
 window.onload = function () {
+    if ( window.Opentip ) {
+        window.Opentip.defaultStyle = "colorDark";
+    }
+
     var el = document.querySelector( "#chart" );
     var chart;
     var data = [
@@ -10,7 +14,7 @@ window.onload = function () {
         { "movie": "Rain Man", "studio": "Universal", "genre": "Drama", "count": 27, "number": 4, "release date": new Date( "December 14, 1989" ) },
     ]
 
-    setTimeout( drawLine );
+    setTimeout( drawPie );
 
     var js = ace.edit( "js" )
     js.setTheme( "ace/theme/monokai" );

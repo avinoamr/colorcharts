@@ -84,7 +84,7 @@
 
             // pythagoras distance between the cursor and the point
             var cy = y( point.y0 + point.y );
-            points.push({ x: cx, y: cy, c: c( data[ i ].key ) });
+            points.push({ x: cx, y: cy, c: c( data[ i ].key ), obj: point });
 
             // are we close enough?
             var dx = Math.abs( cx - mx );
@@ -98,25 +98,55 @@
         }
 
         // draw the points
+        var added, removed;
         var el = d3.select( _hoverpoints._el );
         var hoverpoints = el.selectAll( "circle[data-hoverpoint]" )
             .data( points, function ( p ) { 
                 return [ p.x, p.y ].join( "-" )
             });
         hoverpoints.exit()
-            .transition()
-            .duration( duration )
+            // .transition()
+            // .duration( duration )
             .attr( "r", 0 )
+            .each( function () {
+                removed = true;
+            })
             .remove();
         hoverpoints.enter().append( "circle" )
             .attr( "data-hoverpoint", "" )
             .attr( "cx", function ( d ) { return d.x } )
             .attr( "cy", function ( d ) { return d.y } )
             .attr( "fill", function ( d ) { return d.c } )
-            .attr( "r", 0 );
+            .attr( "r", 0 )
+            .each( function () {
+                added = true;
+            });
         hoverpoints.transition()
             .duration( duration )
-            .attr( "r", radius )
+            .attr( "r", radius );
+        
+        if ( added ) {
+            if ( !_hoverpoints._tip ) {
+                _hoverpoints._tip = new Opentip( this, "Hello", { 
+                    hideOn: "null", 
+                    showOn: "creation",
+                    removeElementsOnHide: true
+                });
+            }
+
+            if ( !_hoverpoints._tip.visible ) {
+                _hoverpoints._tip.prepareToShow();
+            }
+
+            var ys = points.map( function ( p ) {
+                return p.obj.y;
+            }).join( "<br/>" );
+            _hoverpoints._tip.setContent( ys );
+        } else if ( removed && _hoverpoints._tip ) {
+            _hoverpoints._tip.prepareToHide();
+            // delete _hoverpoints._tip;
+        }
+
     }
 
 })();

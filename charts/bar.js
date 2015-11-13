@@ -200,6 +200,10 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
+
+        // build the tooltip behavior
+        color.tooltip()
+            .draw( rects );
     }
 
     function mouseEnter ( svg ) {

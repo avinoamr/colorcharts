@@ -132,7 +132,11 @@
             .attr( "d", arc )
             .attr( "fill", function ( d ) {
                 return c( d.key );
-            })
+            });
+
+        // build the hover behavior
+        color.tooltip()
+            .draw( slices );
     }
 
     function mouseEnter( svg ) {
