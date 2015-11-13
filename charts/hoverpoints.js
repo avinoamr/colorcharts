@@ -22,7 +22,7 @@
         hoverpoints.distance = getset( options, "distance" );
         hoverpoints.data = getset( options, "data" )
             .set( function ( data ) {
-                hoverpoints._xs = data[ 0 ].values.map( function ( point ) {
+                hoverpoints._xs = data[ 0 ].map( function ( point ) {
                     return options.x( point.x );
                 });
             });
@@ -77,7 +77,7 @@
         // cursor, to determine if all of the points should be highlighted or not
         var points = [], closeEnough = false;
         for ( var i = 0 ; i < data.length ; i += 1 ) {
-            var point = data[ i ].values[ ci ];
+            var point = data[ i ][ ci ];
             if ( !point.obj ) {
                 continue; // not a real point
             }

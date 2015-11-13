@@ -109,7 +109,8 @@
 
                 return data;
             })
-            .entries( data );
+            .entries( data )
+            .map( flatten );
 
         // fill-in the gaps
         // d3 requires that all series groups will have same x-coordinates in 
@@ -117,7 +118,6 @@
         // dataset by interpolating the would-be y-coordinate.
         var leaves = color.tree.dfs()
             .filter( function ( d, i, j ) { return j == 2 } )
-            .values( function ( d ) { return d.values || d } )
             .entries( data );
 
         // iterate over all array-indices, until we reach an index where none of 
@@ -127,7 +127,7 @@
             // compute the minimal x-value that should be associated with this 
             // array-index
             ix = d3.min( data, function ( d ) { 
-                return ( d.values[ i ] || {} ).x 
+                return ( d[ i ] || {} ).x 
             });
 
             // if no values exist for this array-index, on all lines, we're done
@@ -136,21 +136,21 @@
             // ensure that all values contains the same x-coordinate on this 
             // array-index
             data.forEach( function ( d ) {
-                var d1 = d.values[ i ];
+                var d1 = d[ i ];
 
                 if ( d1.x == ix ) return;
 
                 // incorrect x-coordinate for this array-index, add an 
                 // artificial point as the interpolation between the current
                 // point, and the previous one.
-                d.values.splice( i, 0, interp( d )( ix ) )
+                d.splice( i, 0, interp( d )( ix ) )
             })
         }
 
         // stack the data
         d3.layout.stack()
             .values( function ( d ) { 
-                return d.values
+                return d
             })( that.stack() ? data : [] );
 
         // build the scales
@@ -226,7 +226,7 @@
             .attr( "fill", "none" )
         lines
             .attr( "d", function ( d ) { 
-                return line( d.values ) 
+                return line( d ) 
             })
             .attr( "stroke", function ( d ) {
                 return c( d.key );
@@ -240,7 +240,7 @@
             .attr( "stroke", "none" )
         areas
             .attr( "d", function ( d ) { 
-                return area( d.values ) 
+                return area( d ) 
             })
             .attr( "fill", function ( d ) {
                 return c( d.key );
@@ -248,7 +248,7 @@
             .style( "opacity", that.stack() ? .4 : .1 );
 
         var points = groups.selectAll( "circle[data-line-point]" )
-            .data( function ( d ) { return d.values })
+            .data( color.identity )
         points.exit().remove()
         points.enter().append( "circle" )
             .attr( "data-line-point", "" )
@@ -339,9 +339,9 @@
 
             // find the 2 points immediately before and after the provided
             // x-coordinate.
-            while ( d.values[ i ] && d.values[ i ].x < x ) { i += 1 }
-            var d1 = d.values[ i ];
-            var d0 = d.values[ i - 1 ] || d1;
+            while ( d[ i ] && d[ i ].x < x ) { i += 1 }
+            var d1 = d[ i ];
+            var d0 = d[ i - 1 ] || d1;
 
             // interpolate between these 2 points
             var total = d1.x - d0.x;
@@ -351,6 +351,15 @@
                 { x: d1.x, y: d1.y, y0: d1.y0 }
             )( part / total );
         }
+    }
+
+    function flatten ( d ) {
+        if ( !d.values ) return d;
+        if ( Array.isArray( d.values ) ) {
+            d.values = d.values.map( flatten );
+        }
+        d.values.key = d.key
+        return d.values;
     }
 
 })();
