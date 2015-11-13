@@ -68,18 +68,8 @@
                     return v;
                 }, data[ 0 ] )
             })
-            .entries( data );
-
-        data = data.map( flatten )
-
-        function flatten ( d ) {
-            if ( !d.values ) return d;
-            if ( Array.isArray( d.values ) ) {
-                d.values = d.values.map( flatten );
-            }
-            d.values.key = d.key
-            return d.values;
-        }
+            .entries( data )
+            .map( flatten );
 
         // extract the colors and bars from the data tree
         var bars = color.tree.dfs()
@@ -262,6 +252,16 @@
                 y.range()[ 1 ] 
             ])
         }
+    }
+
+
+    function flatten ( d ) {
+        if ( !d.values ) return d;
+        if ( Array.isArray( d.values ) ) {
+            d.values = d.values.map( flatten );
+        }
+        d.values.key = d.key
+        return d.values;
     }
 
 
