@@ -55,7 +55,7 @@
         var data = that.data() || el.datum();
 
         // extract the values for each obj
-        var data = data.map( function ( d ) {
+        data = data.map( function ( d ) {
             var v = +d[ that.value() ]
 
             if ( isNaN( v ) ) {

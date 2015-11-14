@@ -14,14 +14,21 @@
             direction: HORIZONTAL
         }
 
-        function legend ( el ) { return legend.draw( el ) }
+        function legend ( el ) { return legend.draw( this ) }
         legend.value = getset( options, "value" );
         legend.color = getset( options, "color" );
         legend.palette = getset( options, "palette" );
         legend.data = getset( options, "data" );
         legend.direction = getset( options, "direction" );
-        legend.draw = function ( el ) {
-            draw( this, el );
+        legend.draw = function ( selection ) {
+            var chart = this;
+            if ( selection instanceof Element ) {
+                selection = d3.selectAll( [ selection ] );
+            }
+
+            selection.each( function ( data ) { 
+                draw( chart, this ) 
+            })
             return this;
         }
 
@@ -29,9 +36,11 @@
     }
 
     function draw ( that, el ) {
+        el = d3.select( el );
 
-        if ( !el.node() ) {
-            return; // no parent
+        if ( el.attr( "data-color-chart" ) != "legend" ) {
+            el.attr( "data-color-chart", "legend" )
+                .text( "" );
         }
 
         // read the data, either from the legend or the element

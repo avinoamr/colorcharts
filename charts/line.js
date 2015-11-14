@@ -53,8 +53,11 @@
         var height = that.height.get( el )
         var width = that.width.get( el )
 
+        // read the data, either from the legend or the element
+        var data = that.data() || el.datum();
+
         // extract the values for each obj
-        var data = that.data().map( function ( d ) {
+        data = data.map( function ( d ) {
             var x = d[ that.x() ];
             var y = +d[ that.y() ];
 

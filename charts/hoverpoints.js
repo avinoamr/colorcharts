@@ -17,7 +17,7 @@
                 })
         }
 
-        function hoverpoints( el ) { return hoverpoints.draw( el ) }
+        function hoverpoints( el ) { return hoverpoints.draw( this ) }
         hoverpoints.x = getset( options, "x" );
         hoverpoints.y = getset( options, "y" );
         hoverpoints.color = getset( options, "color" );
@@ -26,39 +26,61 @@
         hoverpoints.distance = getset( options, "distance" );
         hoverpoints.tooltip = getset( options, "tooltip" );
         hoverpoints.data = getset( options, "data" );
-        hoverpoints.draw = function ( el ) {
-            el = el.node ? el.node() : el;
-            var svg = color.selectUp( el, "svg" );
-
-            if ( !svg.__hoverpoints ) {
-                svg.addEventListener( "mousemove", mouseMove );
+        hoverpoints.draw = function ( selection ) {
+            var chart = this;
+            if ( selection instanceof Element ) {
+                selection = d3.selectAll( [ selection ] );
             }
 
-            this._el = d3.select( el );
-            var data = this.data() || this._el.datum();
-            var x = this.x(), y = this.y(), c = this.color();
-            var xdata = [], map = {};
-            data.forEach( function ( series ) {
-                series.forEach( function ( d ) {
-                    var dx = x( d.x );
-                    if ( !map[ dx ] ) {
-                        xdata.push( map[ dx ] = [] );
-                        map[ dx ].x = dx;
-                    }
-                    map[ dx ].push({ 
-                        x: dx, 
-                        y: y( d.y ), 
-                        c: c( series.key ), 
-                        point: d 
-                    })
-                })
+            selection.each( function ( data ) { 
+                draw( chart, this ) 
             })
-            this._xdata = xdata;
-
-            return svg.__hoverpoints = this;
+            return this;
         }
 
         return hoverpoints;
+    }
+
+    function draw( that, el ) {
+        el = d3.select( el );
+        var svg = color.selectUp( el, "svg" );
+
+        if ( el.attr( "data-color-chart" ) != "hoverpoints" ) {
+            el.attr( "data-color-chart", "hoverpoints" )
+                .text( "" );
+        }
+
+        if ( !svg.__hoverpoints ) {
+            svg.addEventListener( "mousemove", mouseMove );
+        }
+
+        svg.__hoverpoints = that;
+        that._el = el;
+
+        // read the data, either from the legend or the element
+        var data = that.data() || el.datum();
+
+        // transpose the data to be searchable by x-coordinate
+        var x = that.x(), y = that.y(), c = that.color();
+        var xdata = [], map = {};
+        data.forEach( function ( series ) {
+            series.forEach( function ( d ) {
+                var dx = x( d.x );
+                if ( !map[ dx ] ) {
+                    xdata.push( map[ dx ] = [] );
+                    map[ dx ].x = dx;
+                }
+                map[ dx ].push({ 
+                    x: dx, 
+                    y: y( d.y ), 
+                    c: c( series.key ), 
+                    point: d 
+                })
+            })
+        })
+
+        // save it for the mouse move event
+        that._xdata = xdata;
     }
 
     function mouseMove ( ev ) {

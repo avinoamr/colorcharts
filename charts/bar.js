@@ -43,6 +43,10 @@
         return bar;
     }
 
+    function layout( that, data ) {
+
+    }
+
     function draw( that, el ) {
         el = d3.select( el );
 
@@ -54,8 +58,11 @@
         var height = that.height.get( el )
         var width = that.width.get( el )
 
+        // read the data, either from the legend or the element
+        var data = that.data() || el.datum();
+
         // extract the values for each obj
-        var data = that.data().map( function ( d ) {
+        data = data.map( function ( d ) {
             var obj = {};
             var x0 = d[ that.x0() ];
             var x1 = d[ that.x1() ];
