@@ -4,6 +4,8 @@
 
     color.pie = function () {
         var options = {
+            height: color.available( "height" ),
+            width: color.available( "width" ),
             value: null,
             color: null,
             palette: window.color.palettes.default,
@@ -14,14 +16,23 @@
                 .direction( "vertical" )
         }
 
-        function pie ( el ) { return pie.draw( bar, el ) }
+        function pie () { return pie.draw( this ) }
+        pie.height = getset( options, "height" );
+        pie.width = getset( options, "width" );
         pie.value = getset( options, "value" );
         pie.color = getset( options, "color" );
         pie.palette = getset( options, "palette" );
         pie.data = getset( options, "data" );
         pie.legend = getset( options, "legend" );
-        pie.draw = function ( el ) {
-            draw( this, el );
+        pie.draw = function ( selection ) {
+            var chart = this;
+            if ( selection instanceof Element ) {
+                selection = d3.selectAll( [ selection ] );
+            }
+
+            selection.each( function ( data ) { 
+                draw( chart, this ) 
+            })
             return this;
         }
 
@@ -30,26 +41,25 @@
 
     function draw( that, el ) {
         el = d3.select( el );
-        var svg = el.select( "svg" );
 
-        if ( !svg.node() || svg.attr( "data-color" ) != "chart-pie" ) {
-            el.node().innerHTML = "<svg></svg>";
-            svg = el.select( "svg" )
-                .attr( "data-color", "chart-pie" )
-                .style( "height", "100%" )
-                .style( "width", "100%" );
+        if ( el.attr( "data-color-chart" ) != "pie" ) {
+            el.attr( "data-color-chart", "pie" )
+                .text( "" );
         }
 
-        var height = svg.node().offsetHeight;
-        var width = svg.node().offsetWidth;
+        var height = that.height.get( el )
+        var width = that.width.get( el )
         var radius = Math.min( height / 2, width / 2 ) - 10;
 
+        // read the data, either from the legend or the element
+        var data = that.data() || el.datum();
+
         // extract the values for each obj
-        var data = that.data().map( function ( d ) {
+        var data = data.map( function ( d ) {
             var v = +d[ that.value() ]
 
             if ( isNaN( v ) ) {
-                throw new Error( "value must be a number" );
+                throw new Error( "pie value must be a number" );
             }
 
             return { v: v, c: d[ that.color() ], obj: d }
@@ -88,30 +98,28 @@
 
         // tooltip
         var tooltip = color.tooltip()
-            .content( function ( d ) {
-                return that.value() + ": " + d.value;
-            })
             .title( function ( d ) {
-                return d.key;
+                return !d.key 
+                    ? that.value()
+                    : d.key
             })
-
-        // summary
-        var summary = svg.selectAll( "g[data-pie-summary]" )
-            .data( [ data ] )
-        summary.enter().append( "g" )
-            .attr( "data-pie-summary", "" )
-            .attr( "transform", "translate(" + ( width - 200 ) + ",0)" );
+            .content( function ( d ) {
+                return !d.key 
+                    ? d.value
+                    : that.value() + ": " + d.value;
+            })
 
         // draw the legend
-        var legend = svg.selectAll( "g[data-pie-legend]" )
-            .data( [ data ] );
+        var legend = c.domain().length > 1;
+        var legend = el.selectAll( "g[data-pie-legend]" )
+            .data( legend ? [ data ] : [] );
         legend.enter().append( "g" )
             .attr( "data-pie-legend", "" )
             .attr( "transform", "translate(35,10)" )
         legend.call( that.legend().palette( that.palette() ) );
 
         // start drawing
-        var pies = svg.selectAll( "g[data-pie]" )
+        var pies = el.selectAll( "g[data-pie]" )
             .data( [ data ] );
         pies.enter().append( "g" )
             .attr( "data-pie", "" )
@@ -122,55 +130,16 @@
         var slices = pies.selectAll( "path[data-pie-slice]" )
             .data( function ( d ) { return d } );
         slices.exit().remove();
-        slices.enter().append( "path" )
-            .each( function () {
-                this.addEventListener( "mouseenter", mouseEnter( svg ) )
-                this.addEventListener( "mouseleave", mouseLeave( svg ) )
-            })
+        slices.enter().append( "path" );
         slices
-            .call( tooltip )
             .attr( "data-pie-slice", function ( d ) {
                 return d.key;
             })
             .attr( "d", arc )
             .attr( "fill", function ( d ) {
                 return c( d.key );
-            });
-    }
-
-    function mouseEnter( svg ) {
-        return function ( ev ) {
-            var datum = d3.select( this ).datum();
-            var summary = svg.selectAll( "g[data-pie-summary]" )
-                .data( [ datum ] )
-            summary.enter().append( "g" )
-                .attr( "data-pie-summary", "" )
-                .attr( "transform", "translate(" + ( svg.node().offsetWidth - 200 ) + ",0)" )
-            summary
-                .datum([ datum ])
-                .call( color.numbers() )
-
-            var slice = this;
-            var parent = d3.select( slice.parentNode );
-            parent.selectAll( "path[data-pie-slice]" )
-                .each( function () {
-                    d3.select( this )
-                        .transition()
-                        .style( "opacity", this == slice ? 1 : .8 )
-                })
-        }
-    }
-
-    function mouseLeave( summary ) {
-        return function ( ev ) {
-            // summary
-            //     .datum( [] )
-            //     .call( color.numbers() )
-            var parent = d3.select( this.parentNode );
-            parent.selectAll( "path[data-pie-slice]" )
-                .transition()
-                .style( "opacity", 1 );
-        }
+            })
+            .call( tooltip );
     }
 
 })();

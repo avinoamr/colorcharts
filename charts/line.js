@@ -4,6 +4,8 @@
     
     color.line = function () {
         var options = {
+            width: color.available( "width" ),
+            height: color.available( "height" ),
             x: null,
             y: null,
             stack: false,
@@ -15,7 +17,9 @@
                 .color( "key" )
         }
 
-        function line ( el ) { return line.draw( bar, el ) }
+        function line ( el ) { return line.draw( this ) }
+        line.width = getset( options, "width" );
+        line.height = getset( options, "height" );
         line.x = getset( options, "x" );
         line.y = getset( options, "y" );
         line.stack = getset( options, "stack" );
@@ -23,8 +27,15 @@
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
         line.legend = getset( options, "legend" );
-        line.draw = function ( el ) {
-            draw( this, el );
+        line.draw = function ( selection ) {
+            var chart = this;
+            if ( selection instanceof Element ) {
+                selection = d3.selectAll( [ selection ] );
+            }
+
+            selection.each( function ( data ) { 
+                draw( chart, this ) 
+            })
             return this;
         }
 
@@ -33,15 +44,14 @@
 
     function draw( that, el ) {
         el = d3.select( el );
-        var svg = el.select( "svg" );
-
-        if ( !svg.node() || svg.attr( "data-color" ) != "chart-line" ) {
-            el.node().innerHTML = "<svg></svg>";
-            svg = el.select( "svg" )
-                .attr( "data-color", "chart-line" )
-                .style( "height", "100%" )
-                .style( "width", "100%" );
+        
+        if ( el.attr( "data-color-chart" ) != "line" ) {
+            el.attr( "data-color-chart", "line" )
+                .text( "" );
         }
+
+        var height = that.height.get( el )
+        var width = that.width.get( el )
 
         // extract the values for each obj
         var data = that.data().map( function ( d ) {
@@ -156,12 +166,12 @@
         // build the scales
         var x = ( isTimeline ? d3.time.scale() : d3.scale.linear() )
             .domain( xExtent )
-            .range( [ 0, svg.node().offsetWidth ] )
+            .range( [ 0, width ] )
 
         var yExtent = d3.extent( leaves, function ( d ) { return d.y + d.y0 } );
         var y = d3.scale.linear()
             .domain( [ 0, yExtent[ 1 ] ] )
-            .range( [ svg.node().offsetHeight, 8 ] );
+            .range( [ height, 8 ] );
 
         var c = color.palette()
             .colors( that.palette() )
@@ -194,7 +204,7 @@
         // draw the legend
         // only if we have more than one color
         var legend = c.domain().length > 1;
-        var legend = svg.selectAll( "g[data-line-legend]" )
+        var legend = el.selectAll( "g[data-line-legend]" )
             .data( legend ? [ data ] : [] )
         legend.exit().remove();
         legend.enter().append( "g" )
@@ -208,7 +218,7 @@
         }
 
         // start drawing
-        var axis = svg.selectAll( "g[data-line-axis='x']" )
+        var axis = el.selectAll( "g[data-line-axis='x']" )
             .data( [ data ] )
 
         axis.enter().append( "g" )
@@ -217,7 +227,7 @@
 
         axis.call( xlabels( x, y ) )
 
-        var groups = svg.selectAll( "g[data-line-groups]" )
+        var groups = el.selectAll( "g[data-line-groups]" )
             .data( [ data ] );
         groups.enter().append( "g" )
             .attr( "data-line-groups", "" );
@@ -299,7 +309,7 @@
             });
 
         // attach the hoverpoints behavior
-        var hovergroup = svg.selectAll( "g[data-line-hoverpoints]" )
+        var hovergroup = el.selectAll( "g[data-line-hoverpoints]" )
             .data( [ data ] )
         hovergroup.enter().append( "g" )
             .attr( "data-line-hoverpoints", "" )

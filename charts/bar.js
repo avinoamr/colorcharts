@@ -4,6 +4,8 @@
 
     color.bar = function () {
         var options = {
+            width: color.available( "width" ),
+            height: color.available( "height" ),
             x0: null,
             x1: null,
             y: null,
@@ -15,7 +17,9 @@
                 .color( "key" )
         }
 
-        function bar ( el ) { return bar.draw( bar, el ) }
+        function bar () { return bar.draw( this ) }
+        bar.width = getset( options, "width" );
+        bar.height = getset( options, "height" );
         bar.x = getset( options, "x0" );
         bar.x0 = getset( options, "x0" );
         bar.x1 = getset( options, "x1" );
@@ -24,8 +28,15 @@
         bar.palette = getset( options, "palette" );
         bar.data = getset( options, "data" );
         bar.legend = getset( options, "legend" );
-        bar.draw = function ( el ) {
-            draw( this, el );
+        bar.draw = function ( selection ) {
+            var chart = this;
+            if ( selection instanceof Element ) {
+                selection = d3.selectAll( [ selection ] );
+            }
+
+            selection.each( function ( data ) { 
+                draw( chart, this ) 
+            })
             return this;
         }
 
@@ -34,15 +45,14 @@
 
     function draw( that, el ) {
         el = d3.select( el );
-        var svg = el.select( "svg" );
-
-        if ( !svg.node() || svg.attr( "data-color" ) != "chart-bar" ) {
-            el.node().innerHTML = "<svg></svg>";
-            svg = el.select( "svg" )
-                .attr( "data-color", "chart-bar" )
-                .style( "height", "100%" )
-                .style( "width", "100%" );
+        
+        if ( el.attr( "data-color-chart" ) != "bar" ) {
+            el.attr( "data-color-chart", "bar" )
+                .text( "" );
         }
+
+        var height = that.height.get( el )
+        var width = that.width.get( el )
 
         function getter( key ) {
             if ( typeof key == "function" ) {
@@ -107,7 +117,7 @@
         var allx0 = data.map( function ( d ) { return d.key });
         var x0 = d3.scale.ordinal()
             .domain( allx0 )
-            .rangeRoundBands([ 0, svg.node().offsetWidth ], .1 );
+            .rangeRoundBands([ 0, width ], .1 );
 
         var allx1 = bars.map( function ( d ) { return d.key })
         var x1 = d3.scale.ordinal()
@@ -117,7 +127,7 @@
         var ally = colors.map( function ( d ) { return d.y + d.y0 } );
         var y = d3.scale.linear()
             .domain([ 0, d3.max( ally ) ])
-            .rangeRound([ svg.node().offsetHeight, 0 ] );
+            .rangeRound([ height, 0 ] );
 
         var c = color.palette()
             .colors( that.palette() )
@@ -142,7 +152,7 @@
         var legend = c.domain().length > 1
             && that.color() != that.x0()
             && that.color() != that.x1();
-        var legend = svg.selectAll( "g[data-bar-legend]" )
+        var legend = el.selectAll( "g[data-bar-legend]" )
             .data( legend ? [ colors ] : [] )
         legend.exit().remove();
         legend.enter().append( "g" )
@@ -156,7 +166,7 @@
         }
 
         // draw the bars
-        var groups = svg.selectAll( "g[data-bar-group]" )
+        var groups = el.selectAll( "g[data-bar-group]" )
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
@@ -198,11 +208,7 @@
             })
             .attr( "fill", function ( d ) {
                 return c( d.key );
-            })
-            .each( function () {
-                this.addEventListener( "mouseenter", mouseEnter( svg ) )
-                this.addEventListener( "mouseleave", mouseLeave( svg ) )
-            })
+            });
 
         rects
             .call( tooltip )

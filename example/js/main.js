@@ -1,11 +1,11 @@
 window.onload = function () {
-    setTimeout( drawLine );
+    setTimeout( drawPie );
 
     if ( window.Opentip ) {
         window.Opentip.defaultStyle = "colorDark";
     }
 
-    var el = document.querySelector( "#chart" );
+    var el = document.querySelector( "svg" );
     var chart;
     var data = [
         { "movie": "American Beauty", "studio": "Paramount", "genre": "Drama", "count": 40, "number": 1, "release date": new Date( "September 17, 1999" ) },
@@ -185,7 +185,7 @@ window.onload = function () {
         code = []
             .concat( code )
             .concat( '.data([', data, '])' )
-            .concat( '.draw(document.querySelector("#chart"))' )
+            .concat( '.draw(document.querySelector("svg"))' )
             .map( function ( l ) { return "\t" + l } );
 
         code = [ 'color.' + chart.name + "()" ]
