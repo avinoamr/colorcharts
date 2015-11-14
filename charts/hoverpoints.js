@@ -10,7 +10,14 @@
             data: null,
             duration: 50,
             radius: 8,
-            distance: 40
+            distance: 40,
+            tooltip: color.tooltip()
+                .content( function ( d ) {
+                    return d.obj.y;
+                })
+                .title( function ( d ) {
+                    return d.obj.x;
+                })
         }
 
         function hoverpoints( el ) { return hoverpoints.draw( el ) }
@@ -20,12 +27,8 @@
         hoverpoints.duration = getset( options, "duration" );
         hoverpoints.radius = getset( options, "radius" );
         hoverpoints.distance = getset( options, "distance" );
-        hoverpoints.data = getset( options, "data" )
-            .set( function ( data ) {
-                hoverpoints._xs = data[ 0 ].map( function ( point ) {
-                    return options.x( point.x );
-                });
-            });
+        hoverpoints.tooltip = getset( options, "tooltip" );
+        hoverpoints.data = getset( options, "data" );
         hoverpoints.draw = function ( el ) {
             el = el.node ? el.node() : el;
             var svg = color.selectUp( el, "svg" );
@@ -34,7 +37,7 @@
                 svg.addEventListener( "mousemove", mouseMove );
             }
 
-            this._el = el;
+            this._el = d3.select( el );
             return svg.__hoverpoints = this;
         }
 
@@ -43,18 +46,28 @@
 
     function mouseMove ( ev ) {
         var rect = this.getBoundingClientRect()
-        var _hoverpoints = this.__hoverpoints;
-        var xs = _hoverpoints._xs;
-        var x = _hoverpoints.x();
-        var y = _hoverpoints.y();
-        var c = _hoverpoints.color();
-        var data = _hoverpoints.data();
-        var distance = _hoverpoints.distance();
-        var radius = _hoverpoints.radius();
-        var duration = _hoverpoints.duration();
+        var that = this.__hoverpoints;
+        var xs = that._xs;
+        var x = that.x();
+        var y = that.y();
+        var c = that.color();
+        var data = that.data() || that._el.datum();
+        var tooltip = that.tooltip();
+        var distance = that.distance();
+        var radius = that.radius();
+        var duration = that.duration();
 
         var mx = ev.clientX - rect.left;
         var my = ev.clientY - rect.top;
+
+        if ( that._lastData != data ) {
+            that._lastData = data;
+            that._xs = data[ 0 ].map( function ( d ) {
+                return x( d.x );
+            });
+        }
+
+        var xs = that._xs;
 
         // binary search for the closest x-coordinate in the dataset
         // this is a large dataset, containing possibly thousands of 
@@ -97,18 +110,8 @@
             points = [];
         }
 
-        var tooltip = color.tooltip()
-            .content( function ( d ) {
-                return d.obj.y;
-            })
-            .title( function ( d ) {
-                return d.obj.x;
-            })
-
         // draw the points
-        var added, removed;
-        var el = d3.select( _hoverpoints._el );
-        var hoverpoints = el.selectAll( "g[data-hoverpoint]" )
+        var hoverpoints = that._el.selectAll( "g[data-hoverpoint]" )
             .data( points, function ( d ) {
                 return [ d.x, d.y ].join( "-" )
             });

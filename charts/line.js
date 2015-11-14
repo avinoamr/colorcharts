@@ -168,6 +168,11 @@
             .domain( data.map( function ( d ) { return d.key } ) )
             .scale();
 
+        var hoverpoints = color.hoverpoints()
+            .x( x )
+            .y( y )
+            .color( c )
+
         var area = d3.svg.area()
             .x( function ( d ) { return x( d.x ) })
             .y0( function ( d ) { return y( d.y0 ) })
@@ -281,16 +286,11 @@
             });
 
         // attach the hoverpoints behavior
-        var hoverpoints = svg.selectAll( "g[data-line-hoverpoints]" )
+        var hovergroup = svg.selectAll( "g[data-line-hoverpoints]" )
             .data( [ data ] )
-        hoverpoints.enter().append( "g" )
+        hovergroup.enter().append( "g" )
             .attr( "data-line-hoverpoints", "" )
-        color.hoverpoints()
-            .x( x )
-            .y( y )
-            .color( c )
-            .data( data )
-            .draw( hoverpoints );
+        hovergroup.call( hoverpoints );
     }
 
     function xlabels ( x, y ) {
