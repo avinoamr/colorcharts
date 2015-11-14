@@ -1,5 +1,5 @@
 window.onload = function () {
-    setTimeout( drawPie );
+    setTimeout( drawLine );
 
     if ( window.Opentip ) {
         window.Opentip.defaultStyle = "colorDark";
