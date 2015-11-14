@@ -13,10 +13,10 @@
             distance: 40,
             tooltip: color.tooltip()
                 .content( function ( d ) {
-                    return d.obj.y;
+                    return d.point.y;
                 })
                 .title( function ( d ) {
-                    return d.obj.x;
+                    return d.point.x;
                 })
         }
 
@@ -38,6 +38,26 @@
             }
 
             this._el = d3.select( el );
+            var data = this.data() || this._el.datum();
+            var x = this.x(), y = this.y(), c = this.color();
+            var xdata = [], map = {};
+            data.forEach( function ( series ) {
+                series.forEach( function ( d ) {
+                    var dx = x( d.x );
+                    if ( !map[ dx ] ) {
+                        xdata.push( map[ dx ] = [] );
+                        map[ dx ].x = dx;
+                    }
+                    map[ dx ].push({ 
+                        x: dx, 
+                        y: y( d.y ), 
+                        c: c( series.key ), 
+                        point: d 
+                    })
+                })
+            })
+            this._xdata = xdata;
+
             return svg.__hoverpoints = this;
         }
 
@@ -51,7 +71,6 @@
         var x = that.x();
         var y = that.y();
         var c = that.color();
-        var data = that.data() || that._el.datum();
         var tooltip = that.tooltip();
         var distance = that.distance();
         var radius = that.radius();
@@ -60,48 +79,38 @@
         var mx = ev.clientX - rect.left;
         var my = ev.clientY - rect.top;
 
-        if ( that._lastData != data ) {
-            that._lastData = data;
-            that._xs = data[ 0 ].map( function ( d ) {
-                return x( d.x );
-            });
-        }
-
-        var xs = that._xs;
-
         // binary search for the closest x-coordinate in the dataset
         // this is a large dataset, containing possibly thousands of 
         // x-coordinates, so it must be fast
-        var ci0 = 0, ci1 = xs.length, ci;
+        var data = that._xdata;
+        var ci0 = 0, ci1 = data.length, ci;
         do {
             ci = ci0 + Math.floor( ( ci1 - ci0 ) / 2 )
-            if ( mx > xs[ ci ] ) {
+            if ( mx > data[ ci ].x ) {
                 ci0 = ci;
             } else {
                 ci1 = ci;
             }
         } while ( ci1 - ci0 > 1 );
-        ci = xs[ ci1 ] - mx > mx - xs[ ci0 ] ? ci0 : ci1;
-        var cx = xs[ ci ];
+
+        ci = data[ ci1 ].x - mx > mx - data[ ci0 ].x ? ci0 : ci1;
+        var cx = data[ ci ].x;
 
         // build the list of all points for the given x-coordinate
         // this is a much smaller dataset containing only a single x-coord
         // side-effect: determine if any of these points are close enough to the
         // cursor, to determine if all of the points should be highlighted or not
         var points = [], closeEnough = false;
-        for ( var i = 0 ; i < data.length ; i += 1 ) {
-            var point = data[ i ][ ci ];
-            if ( !point.obj ) {
-                continue; // not a real point
-            }
+        for ( var i = 0 ; i < data[ ci ].length ; i += 1 ) {
+            var point = data[ ci ][ i ];
 
-            // pythagoras distance between the cursor and the point
-            var cy = y( point.y0 + point.y );
-            points.push({ x: cx, y: cy, c: c( data[ i ].key ), obj: point });
+            // add the point to the highlight list
+            points.push( point );
 
             // are we close enough?
-            var dx = Math.abs( cx - mx );
-            var dy = Math.abs( cy - my );
+            // pythagoras distance between the cursor and the point
+            var dx = Math.abs( point.x - mx );
+            var dy = Math.abs( point.y - my );
             var dist = Math.sqrt( Math.pow( dx, 2 ) + Math.pow( dy, 2 ) );
             closeEnough = closeEnough || dist < distance
         }
@@ -136,7 +145,9 @@
             })
         points.transition()
             .duration( duration )
-            .attr( "r", radius );
+            .attr( "r", function ( d ) {
+                return d.point.obj ? radius : 0
+            });
 
         // hover-area
         var hover = hoverpoints.selectAll( "circle[data-hoverpoints-hover" )

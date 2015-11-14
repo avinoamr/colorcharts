@@ -1,5 +1,5 @@
 window.onload = function () {
-    setTimeout( drawBar );
+    setTimeout( drawLine );
 
     if ( window.Opentip ) {
         window.Opentip.defaultStyle = "colorDark";

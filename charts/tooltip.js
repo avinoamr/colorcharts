@@ -28,7 +28,21 @@
         tooltip.title = getset( options, "title" );
         tooltip.content = getset( options, "content" );
         tooltip.color = getset( options, "c" );
-        tooltip.draw = function ( els ) {
+        tooltip.draw = function ( el ) {
+            if ( !el.node() ) {
+                return; // no parent
+            }
+
+            var svg = color.selectUp( el, "svg" );
+            var tooltip = svg.__tooltip;
+            if ( !tooltip ) {
+                tooltip = svg.__tooltip = new Opentip( svg, "Hello", {
+                    showOn: "null",
+                    hideOn: "null",
+                    removeElementsOnHide: true
+                });
+            }
+
             var title = this.title();
             if ( typeof title != "function" ) {
                 title = (function ( d ) {
@@ -43,19 +57,19 @@
                 }).bind( this )
             }
 
-            els.each( function ( d ) {
-                if ( !this.__tooltip ) {
-                    this.__tooltip = new Opentip( this, "Hello", {
-                        showOn: "mouseover",
-                        hideOn: "mouseleave",
-                        removeElementsOnHide: true
-                    });
-                }
-
-                this.__tooltip.setContent([
+            el.each( function ( d ) {
+                var html = [
                     "<h3 style='margin: 0'>" + title( d ) + "</h3>",
                     content( d )
-                ].join( "<br />" ) );
+                ].join( "<br />" )
+                d3.select( this )
+                    .on( "mouseenter", function () {
+                        tooltip.setContent( html )
+                        tooltip.prepareToShow()
+                    })
+                    .on( "mouseleave", function () {
+                        tooltip.hide()
+                    })
             })
         }
 

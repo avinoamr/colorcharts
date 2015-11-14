@@ -172,6 +172,10 @@
             .x( x )
             .y( y )
             .color( c )
+        // hoverpoints.tooltip()
+        //     .content( function ( d ) {
+        //         return ( d.obj.c || that.y() ) + ": " + d.obj.y;
+        //     })
 
         var area = d3.svg.area()
             .x( function ( d ) { return x( d.x ) })
