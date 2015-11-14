@@ -112,16 +112,22 @@
             y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
         }
 
-        // start drawing
+        // draw the axes
         var axis = el.selectAll( "g[data-line-axis='x']" )
             .data( [ data ] )
-
         axis.enter().append( "g" )
             .attr( "data-line-axis", "x" )
             .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
-
         axis.call( xlabels( x, y ) )
 
+        var axis = el.selectAll( "g[data-line-axis='y']" )
+            .data( [ data ] )
+        axis.enter().append( "g" )
+            .attr( "data-line-axis", "y" )
+        axis.call( ylabels( x, y ) )
+
+
+        // start drawing
         var groups = el.selectAll( "g[data-line-groups]" )
             .data( [ data ] );
         groups.enter().append( "g" )
@@ -285,6 +291,40 @@
         data.leaves = function () { return leaves }
         data.isTimeline = function () { return isTimeline }
         return data;
+    }
+
+    function ylabels ( x, y ) {
+        var width = x.range()[ 1 ] - x.range()[ 0 ];
+        var yAxis = d3.svg.axis()
+            .scale( y )
+            .orient( "left" )
+            .tickSize( width, 0 )
+            .ticks( 3 )
+
+        return function () {
+            var maxw = 0;
+            this
+                .call( yAxis )
+                .each( function () {
+                    d3.select( this )
+                        .selectAll( "path.domain" )
+                        .attr( "fill", "white" );
+                })
+                .selectAll( "g.tick" )
+                    .each( function () {
+                        var tick = d3.select( this );
+                        tick.select( "line" )
+                            .attr( "stroke", "rgba(255,255,255,.1)" )
+                        var text = tick.select( "text" )
+                            .attr( "fill", "rgba(255,255,255,.5)" )
+
+                        maxw = Math.max( maxw, text.node().offsetWidth );
+                    });
+            
+            maxw = maxw ? maxw + 8 : 0; 
+            this.attr( "transform", "translate(" + ( width + maxw ) + ",0)" );
+
+        }
     }
 
     function xlabels ( x, y ) {
