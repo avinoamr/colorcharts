@@ -44,8 +44,23 @@
                 .style( "width", "100%" );
         }
 
+        function getter( key ) {
+            if ( typeof key == "function" ) {
+                return key;
+            } else {
+                return function ( d ) {
+                    return d[ key ];
+                }
+            }
+        }
+
+        var getx0 = getter( that.x0() );
+        var getx1 = getter( that.x1() );
+        var getc = getter( that.color() );
+
         // extract the values for each obj
         var data = that.data().map( function ( d ) {
+            var obj = {};
             var x0 = d[ that.x0() ];
             var x1 = d[ that.x1() ];
             var c = d[ that.color() ];
@@ -66,7 +81,7 @@
                 return data.reduce( function ( v, d ) {
                     v.y += d.y;
                     return v;
-                }, data[ 0 ] )
+                }, data[ 0 ] );
             })
             .entries( data )
             .map( flatten );
@@ -115,6 +130,18 @@
             .range( palette )
 
         var c = palette.from && palette.to ? clin : cord;
+
+        var tooltip = color.tooltip()
+            .content( function ( d ) {
+                var keys = [ that.y(), that.x0(), that.x1(), that.color() ];
+                return keys.filter( color.identity )
+                    .map( function ( key ) {
+                        return key + ": " + d.obj[ key ];
+                    }).join( "<br />" );
+            })
+            .title( function ( d ) {
+                return d.c || d.x1 || d.x0;
+            })
 
         // draw the legend
         // only if there's more than 1 color, and we don't show the labels on
@@ -185,6 +212,7 @@
             })
 
         rects
+            .call( tooltip )
             .transition()
             .attr( "y", function ( d ) {
                 // start at the baseline + the height
@@ -200,11 +228,6 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-
-        // build the tooltip behavior
-        color.tooltip()
-            .label( "x0" )
-            .draw( rects );
     }
 
     function mouseEnter ( svg ) {

@@ -93,6 +93,14 @@
             .outerRadius( radius )
             .innerRadius( 0 );
 
+        // tooltip
+        var tooltip = color.tooltip()
+            .value( that.value() )
+            .color( that.color() )
+            .label( function ( d ) {
+                return d.key;
+            })
+
         // summary
         var summary = svg.selectAll( "g[data-pie-summary]" )
             .data( [ data ] )
@@ -126,6 +134,7 @@
                 this.addEventListener( "mouseleave", mouseLeave( svg ) )
             })
         slices
+            .call( tooltip )
             .attr( "data-pie-slice", function ( d ) {
                 return d.key;
             })
@@ -133,11 +142,6 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             });
-
-        // build the hover behavior
-        color.tooltip()
-            .label( "key" )
-            .draw( slices );
     }
 
     function mouseEnter( svg ) {

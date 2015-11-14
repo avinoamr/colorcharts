@@ -19,53 +19,47 @@
         var options = {
             value: null,
             label: null,
+            title: null,
+            y: null,
+            v: null,
         }
 
         function tooltip ( el ) { tooltip.draw( el ) }
-        tooltip.value = getset( options, "value" );
-        tooltip.label = getset( options, "label" );
+        tooltip.title = getset( options, "title" );
+        tooltip.content = getset( options, "content" );
+        tooltip.color = getset( options, "c" );
         tooltip.draw = function ( els ) {
-            var el = els.node ? els.node() : els;
-            this.__svg = color.selectUp( el, "svg" )
+            var title = this.title();
+            if ( typeof title != "function" ) {
+                title = (function ( d ) {
+                    return d[ this.title() ] 
+                }).bind( this )
+            }
 
-            els.each( function () {
+            var content = this.content();
+            if ( typeof content != "function" ) {
+                content = (function ( d ) {
+                    return this.content() 
+                }).bind( this )
+            }
+
+            els.each( function ( d ) {
                 if ( !this.__tooltip ) {
-                    d3.select( this )
-                        .on( "mouseenter", mouseEnter )
-                        .on( "mouseleave", mouseLeave );
+                    this.__tooltip = new Opentip( this, "Hello", {
+                        showOn: "mouseover",
+                        hideOn: "mouseleave",
+                        removeElementsOnHide: true
+                    });
                 }
 
-                this.__tooltip = tooltip;
+                this.__tooltip.setContent([
+                    "<h3 style='margin: 0'>" + title( d ) + "</h3>",
+                    content( d )
+                ].join( "<br />" ) );
             })
-
-            return this;
         }
 
         return tooltip;
-    }
-
-    function mouseEnter( d ) {
-        var that = this.__tooltip;
-        var svg = that.__svg;
-
-        if ( !svg.__tip ) {
-            svg.__tip = new Opentip( this, "TEXT?", { 
-                showOn: "creation", 
-                hideOn: "null",
-                removeElementsOnHide: true 
-            })
-        }
-
-        var label = that.label();
-        label = typeof label == "function" ? label( d ) : d[ label ];
-        svg.__tip.setContent( label );
-        svg.__tip.prepareToShow();
-    }
-
-    function mouseLeave( ev ) {
-        var tooltip = this.__tooltip;
-        var svg = tooltip.__svg;
-        svg.__tip.prepareToHide();
     }
 
 })();

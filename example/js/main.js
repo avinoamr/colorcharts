@@ -1,4 +1,6 @@
 window.onload = function () {
+    setTimeout( drawBar );
+
     if ( window.Opentip ) {
         window.Opentip.defaultStyle = "colorDark";
     }
@@ -13,8 +15,6 @@ window.onload = function () {
         { "movie": "Men in Black", "studio": "Universal", "genre": "Sci-Fi", "count": 39, "number": 4, "release date": new Date( "July 2, 1997" ) },
         { "movie": "Rain Man", "studio": "Universal", "genre": "Drama", "count": 27, "number": 4, "release date": new Date( "December 14, 1989" ) },
     ]
-
-    setTimeout( drawBar );
 
     var js = ace.edit( "js" )
     js.setTheme( "ace/theme/monokai" );

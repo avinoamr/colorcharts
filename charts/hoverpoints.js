@@ -97,55 +97,53 @@
             points = [];
         }
 
+        var tooltip = color.tooltip()
+            .content( function ( d ) {
+                return d.obj.y;
+            })
+            .title( function ( d ) {
+                return d.obj.x;
+            })
+
         // draw the points
         var added, removed;
         var el = d3.select( _hoverpoints._el );
-        var hoverpoints = el.selectAll( "circle[data-hoverpoint]" )
-            .data( points, function ( p ) { 
-                return [ p.x, p.y ].join( "-" )
+        var hoverpoints = el.selectAll( "g[data-hoverpoint]" )
+            .data( points, function ( d ) {
+                return [ d.x, d.y ].join( "-" )
             });
-        hoverpoints.exit()
-            // .transition()
-            // .duration( duration )
-            .attr( "r", 0 )
-            .each( function () {
-                removed = true;
+        hoverpoints.exit().remove();
+        hoverpoints.enter().append( "g" )
+            .attr( "data-hoverpoint", function ( d ) {
+                return [ d.x, d.y ].join( "-" )
             })
-            .remove();
-        hoverpoints.enter().append( "circle" )
-            .attr( "data-hoverpoint", "" )
-            .attr( "cx", function ( d ) { return d.x } )
-            .attr( "cy", function ( d ) { return d.y } )
-            .attr( "fill", function ( d ) { return d.c } )
+            .attr( "transform", function ( d ) {
+                return "translate(" + d.x + "," + d.y + ")";
+            })
+
+        // actual point circles
+        var points = hoverpoints.selectAll( "circle[data-hoverpoints-point]" )
+            .data( function ( d ) { return [ d ] } )
+        points.exit().remove();
+        points.enter().append( "circle" )
+            .attr( "data-hoverpoints-point", "" )
             .attr( "r", 0 )
-            .each( function () {
-                added = true;
-            });
-        hoverpoints.transition()
+            .attr( "fill", function ( d ) {
+                return d.c
+            })
+        points.transition()
             .duration( duration )
             .attr( "r", radius );
-        
-        if ( added ) {
-            if ( !_hoverpoints._tip ) {
-                _hoverpoints._tip = new Opentip( this, "Hello", { 
-                    hideOn: "null", 
-                    showOn: "creation",
-                    removeElementsOnHide: true
-                });
-            }
 
-            if ( !_hoverpoints._tip.visible ) {
-                _hoverpoints._tip.prepareToShow();
-            }
-
-            var ys = points.map( function ( p ) {
-                return p.obj.y;
-            }).join( "<br/>" );
-            _hoverpoints._tip.setContent( ys );
-        } else if ( removed && _hoverpoints._tip ) {
-            _hoverpoints._tip.prepareToHide();
-            // delete _hoverpoints._tip;
-        }
+        // hover-area
+        var hover = hoverpoints.selectAll( "circle[data-hoverpoints-hover" )
+            .data( function ( d ) { return [ d ] } );
+        hover.exit().remove()
+        hover.enter().append( "circle" )
+            .attr( "data-hoverpoints-hover", "" )
+            .attr( "fill", "transparent" )
+            .attr( "r", distance )
+            .call( tooltip );
 
     }
 
