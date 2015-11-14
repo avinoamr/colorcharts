@@ -152,7 +152,8 @@
         // hover-area
         var hover = hoverpoints.selectAll( "circle[data-hoverpoints-hover" )
             .data( function ( d ) { return [ d ] } );
-        hover.exit().remove()
+        hover.exit()
+            .remove()
         hover.enter().append( "circle" )
             .attr( "data-hoverpoints-hover", "" )
             .attr( "fill", "transparent" )

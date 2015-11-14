@@ -174,7 +174,6 @@
             .color( c )
         hoverpoints.tooltip()
             .content( function ( d ) {
-                console.log( d );
                 return ( d.point.c || that.y() ) + ": " + d.point.y;
             })
 
@@ -213,8 +212,12 @@
 
         axis.call( xlabels( x, y ) )
 
-        var groups = svg.selectAll( "g[data-line-group]" )
-            .data( data );
+        var groups = svg.selectAll( "g[data-line-groups]" )
+            .data( [ data ] );
+        groups.enter().append( "g" )
+            .attr( "data-line-groups", "" );
+        var groups = groups.selectAll( "g[data-line-group]" )
+            .data( color.identity );
         groups.exit().remove();
         groups.enter().append( "g" )
         groups.attr( "data-line-group", function ( d ) {
