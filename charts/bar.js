@@ -135,6 +135,7 @@
 
         bars
             .call( xlabels( x1, y ) )
+            .call( ylabels( x1, y, c ) )
             .transition()
             .attr( "transform", function ( d ) {
                 return "translate(" + x1( d.key ) + ",0)";
@@ -149,7 +150,8 @@
             })
             .attr( "fill", function ( d ) {
                 return c( d.key );
-            });
+            })
+            // .style( "opacity", 1 );
 
         rects
             .call( tooltip )
@@ -185,15 +187,16 @@
             return { x0: x0, x1: x1, c: c, y: y, y0: 0, obj: d }
         })
 
+
         data = d3.nest()
             .key( function ( d ) { return d.x0 || "" } )
             .key( function ( d ) { return d.x1 || "" } )
             .key( function ( d ) { return d.c  || "" } )
             .rollup( function ( data ) {
-                return data.reduce( function ( v, d ) {
-                    v.y += d.y;
-                    return v;
-                }, data[ 0 ] );
+                for ( var i = 1 ; i < data.length ; i += 1 ) {
+                    data[ 0 ].y += data[ i ].y
+                }
+                return data[ 0 ];
             })
             .entries( data )
             .map( flatten );
@@ -217,18 +220,60 @@
         return data;
     }
 
+    function ylabels ( x, y, c ) {
+        var w = x.rangeBand() / 2;
+        return function ( bars ) {
+            y.range([
+                y.range()[ 0 ],
+                y.range()[ 1 ] + 20,
+            ])
+
+            var maxh = 0;
+            var labels = bars.selectAll( "text[data-bar-label='y']" )
+                .data( function ( d ) { return [ d ] } )
+
+            labels.enter().append( "text" )
+                .attr( "data-bar-label", "y" );
+            labels.exit().remove();
+            labels
+                .text( function ( data ) { 
+                    var totaly = d3.max( data, function ( d ) {
+                        return d.y + d.y0;
+                    })
+                    return totaly;
+                })
+                .attr( "height", 20 )
+                .attr( "width", 20 )
+                .attr( "y", function ( data ) {
+                    return d3.min( data, function ( d ) {
+                        return y( d.y + d.y0 );
+                    }) - 20
+                })
+                .style( "font", "12px roboto_condensedregular" )
+                .style( "fill", function ( data ) {
+                    return data.length == 1
+                        ? c( data[ 0 ].key )
+                        : "white";
+                })
+                .attr( "text-anchor", "middle" )
+                .attr( "alignment-baseline", "hanging" )
+                .attr( "transform", "translate(" + w + ",0)" )
+        }
+    }
+
     function xlabels ( x, y ) {
         var h = y.range()[ 1 ] - y.range()[ 0 ];
         var w = x.rangeBand() / 2;
         return function ( groups ) {
-            var labels = groups.selectAll( "text" )
+            var labels = groups.selectAll( "text[data-bar-label='x']" )
                 .data( function ( d ) { return [ d ] } )
 
-            labels.enter().append( "text" );
+            labels.enter().append( "text" )
+                .attr( "data-bar-label", "x" );
             labels.exit().remove();
             labels
                 .text( function ( d ) { return d.key })
-                .style( "font", "12px roboto_condensedregular" )
+                // .style( "font", "12px roboto_condensedregular" )
                 .style( "fill", "white" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", function ( d ) {
