@@ -77,17 +77,10 @@
                 return d;
             });
 
-        var palette = that.palette();
-        var allc = data.map( function ( d ) { return d.key } );
-        var clin = d3.scale.linear()
-            .domain( d3.extent( allc ) )
-            .range( [ palette.from, palette.to ] );
-
-        var cord = d3.scale.ordinal()
-            .domain( allc )
-            .range( palette )
-
-        var c = palette.from && palette.to ? clin : cord;
+        var c = color.palette()
+            .colors( that.palette() )
+            .domain( data.map( function ( d ) { return d.key } ) )
+            .scale();
 
         var arc = d3.svg.arc()
             .outerRadius( radius )
@@ -95,9 +88,10 @@
 
         // tooltip
         var tooltip = color.tooltip()
-            .value( that.value() )
-            .color( that.color() )
-            .label( function ( d ) {
+            .content( function ( d ) {
+                return that.value() + ": " + d.value;
+            })
+            .title( function ( d ) {
                 return d.key;
             })
 
@@ -114,7 +108,7 @@
         legend.enter().append( "g" )
             .attr( "data-pie-legend", "" )
             .attr( "transform", "translate(35,10)" )
-        legend.call( that.legend().palette( palette ) );
+        legend.call( that.legend().palette( that.palette() ) );
 
         // start drawing
         var pies = svg.selectAll( "g[data-pie]" )

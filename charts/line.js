@@ -163,17 +163,10 @@
             .domain( [ 0, yExtent[ 1 ] ] )
             .range( [ svg.node().offsetHeight, 8 ] );
 
-        var palette = that.palette();
-        var allc = data.map( function ( d ) { return d.key } );
-        var clin = d3.scale.linear()
-            .domain( d3.extent( allc ) )
-            .range( [ palette.from, palette.to ] );
-
-        var cord = d3.scale.ordinal()
-            .domain( allc )
-            .range( palette )
-
-        var c = palette.from && palette.to ? clin : cord;
+        var c = color.palette()
+            .colors( that.palette() )
+            .domain( data.map( function ( d ) { return d.key } ) )
+            .scale();
 
         var area = d3.svg.area()
             .x( function ( d ) { return x( d.x ) })
@@ -193,7 +186,7 @@
         legend.enter().append( "g" )
             .attr( "data-line-legend", "" )
             .attr( "transform", "translate(35,10)" )
-        legend.call( that.legend().palette( palette ) );
+        legend.call( that.legend().palette( that.palette() ) );
         legend = legend.node()
         if ( legend ) {
             var height = legend.getBBox().height;

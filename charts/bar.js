@@ -119,17 +119,10 @@
             .domain([ 0, d3.max( ally ) ])
             .rangeRound([ svg.node().offsetHeight, 0 ] );
 
-        var palette = that.palette();
-        var allc = colors.map( function ( d ) { return d.key } );
-        var clin = d3.scale.linear()
-            .domain( d3.extent( allc ) )
-            .range( [ palette.from, palette.to ] );
-
-        var cord = d3.scale.ordinal()
-            .domain( allc )
-            .range( palette )
-
-        var c = palette.from && palette.to ? clin : cord;
+        var c = color.palette()
+            .colors( that.palette() )
+            .domain( colors.map( function ( d ) { return d.key } ) )
+            .scale();
 
         var tooltip = color.tooltip()
             .content( function ( d ) {
@@ -155,7 +148,7 @@
         legend.enter().append( "g" )
             .attr( "data-bar-legend", "" )
             .attr( "transform", "translate(35,10)" )
-        legend.call( that.legend().palette( palette ) );
+        legend.call( that.legend().palette( that.palette() ) );
         legend = legend.node()
         if ( legend ) {
             var height = legend.getBBox().height;
