@@ -347,10 +347,13 @@
             // interpolate between these 2 points
             var total = d1.x - d0.x;
             var part = x - d0.x;
-            return d3.interpolate(
+            var interpd = d3.interpolate(
                 { x: d0.x, y: d0.y, y0: d0.y0 }, 
                 { x: d1.x, y: d1.y, y0: d1.y0 }
             )( part / total );
+
+            interpd.x = x;
+            return interpd;
         }
     }
 
