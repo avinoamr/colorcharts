@@ -28,13 +28,13 @@
         line.data = getset( options, "data" );
         line.legend = getset( options, "legend" );
         line.draw = function ( selection ) {
-            var chart = this;
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }
 
             selection.each( function ( data ) { 
-                draw( chart, this ) 
+                var data = layout( line, line.data() || data );
+                draw( line, this, data ); 
             })
             return this;
         }
@@ -42,7 +42,7 @@
         return line;
     }
 
-    function draw( that, el ) {
+    function draw ( that, el, data ) {
         el = d3.select( el );
         
         if ( el.attr( "data-color-chart" ) != "line" ) {
@@ -53,9 +53,125 @@
         var height = that.height.get( el )
         var width = that.width.get( el )
 
-        // read the data, either from the legend or the element
-        var data = that.data() || el.datum();
+        // build the scales
+        var xExtent = d3.extent( data.leaves(), function ( d ) { 
+            return d.x
+        });
+        var x = ( data.isTimeline() ? d3.time.scale() : d3.scale.linear() )
+            .domain( xExtent )
+            .range( [ 0, width ] )
 
+        var yExtent = d3.extent( data.leaves(), function ( d ) { 
+            return d.y + d.y0 
+        });
+        var y = d3.scale.linear()
+            .domain( [ 0, yExtent[ 1 ] ] )
+            .range( [ height, 8 ] );
+
+        var c = color.palette()
+            .colors( that.palette() )
+            .domain( data.map( function ( d ) { return d.key } ) )
+            .scale();
+
+        var hoverpoints = color.hoverpoints()
+            .x( x )
+            .y( y )
+            .color( c )
+        hoverpoints.tooltip()
+            .content( function ( data ) {
+                return data.filter( function ( d ) {
+                    return !!d.point.obj
+                })
+                .map( function ( d ) {
+                    return ( d.point.c || that.y() ) + ": " + d.point.y
+                }).join( "<br/>" );
+            })
+
+        var area = d3.svg.area()
+            .x( function ( d ) { return x( d.x ) })
+            .y0( function ( d ) { return y( d.y0 ) })
+            .y1( function ( d ) { return y( d.y0 + d.y ) })
+
+        var line = d3.svg.line()
+            .x( function ( d ) { return x( d.x ) })
+            .y( function ( d ) { return y( d.y0 + d.y ) })
+
+        // draw the legend
+        // only if we have more than one color
+        var legend = c.domain().length > 1;
+        var legend = el.selectAll( "g[data-line-legend]" )
+            .data( legend ? [ data ] : [] )
+        legend.exit().remove();
+        legend.enter().append( "g" )
+            .attr( "data-line-legend", "" )
+            .attr( "transform", "translate(35,10)" )
+        legend.call( that.legend().palette( that.palette() ) );
+        legend = legend.node()
+        if ( legend ) {
+            var height = legend.getBBox().height;
+            y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
+        }
+
+        // start drawing
+        var axis = el.selectAll( "g[data-line-axis='x']" )
+            .data( [ data ] )
+
+        axis.enter().append( "g" )
+            .attr( "data-line-axis", "x" )
+            .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
+
+        axis.call( xlabels( x, y ) )
+
+        var groups = el.selectAll( "g[data-line-groups]" )
+            .data( [ data ] );
+        groups.enter().append( "g" )
+            .attr( "data-line-groups", "" );
+        var groups = groups.selectAll( "g[data-line-group]" )
+            .data( color.identity );
+        groups.exit().remove();
+        groups.enter().append( "g" )
+        groups.attr( "data-line-group", function ( d ) {
+            return d.key;
+        })
+
+        var lines = groups.selectAll( "path[data-line]" )
+            .data( function ( d ) { return [ d ] } )
+        lines.exit().remove();
+        lines.enter().append( "path" )
+            .attr( "data-line", "" )
+            .attr( "fill", "none" )
+        lines
+            .attr( "d", function ( d ) { 
+                return line( d ) 
+            })
+            .attr( "stroke", function ( d ) {
+                return c( d.key );
+            });
+
+        var areas = groups.selectAll( "path[data-line-area]" )
+            .data( function ( d ) { return [ d ] } );
+        areas.exit().remove()
+        areas.enter().append( "path" )
+            .attr( "data-line-area", "" )
+            .attr( "stroke", "none" )
+        areas
+            .attr( "d", function ( d ) { 
+                return area( d ) 
+            })
+            .attr( "fill", function ( d ) {
+                return c( d.key );
+            })
+            .style( "opacity", that.stack() ? .4 : .1 );
+
+        // attach the hoverpoints behavior
+        var hovergroup = el.selectAll( "g[data-line-hoverpoints]" )
+            .data( [ data ] )
+        hovergroup.enter().append( "g" )
+            .attr( "data-line-hoverpoints", "" )
+        hovergroup.call( hoverpoints );
+    }
+
+    function layout ( that, data ) {
         // extract the values for each obj
         data = data.map( function ( d ) {
             var x = d[ that.x() ];
@@ -166,157 +282,9 @@
                 return d
             })( that.stack() ? data : [] );
 
-        // build the scales
-        var x = ( isTimeline ? d3.time.scale() : d3.scale.linear() )
-            .domain( xExtent )
-            .range( [ 0, width ] )
-
-        var yExtent = d3.extent( leaves, function ( d ) { return d.y + d.y0 } );
-        var y = d3.scale.linear()
-            .domain( [ 0, yExtent[ 1 ] ] )
-            .range( [ height, 8 ] );
-
-        var c = color.palette()
-            .colors( that.palette() )
-            .domain( data.map( function ( d ) { return d.key } ) )
-            .scale();
-
-        var hoverpoints = color.hoverpoints()
-            .x( x )
-            .y( y )
-            .color( c )
-        hoverpoints.tooltip()
-            .content( function ( data ) {
-                return data.filter( function ( d ) {
-                    return !!d.point.obj
-                })
-                .map( function ( d ) {
-                    return ( d.point.c || that.y() ) + ": " + d.point.y
-                }).join( "<br/>" );
-            })
-
-        var area = d3.svg.area()
-            .x( function ( d ) { return x( d.x ) })
-            .y0( function ( d ) { return y( d.y0 ) })
-            .y1( function ( d ) { return y( d.y0 + d.y ) })
-
-        var line = d3.svg.line()
-            .x( function ( d ) { return x( d.x ) })
-            .y( function ( d ) { return y( d.y0 + d.y ) })
-
-        // draw the legend
-        // only if we have more than one color
-        var legend = c.domain().length > 1;
-        var legend = el.selectAll( "g[data-line-legend]" )
-            .data( legend ? [ data ] : [] )
-        legend.exit().remove();
-        legend.enter().append( "g" )
-            .attr( "data-line-legend", "" )
-            .attr( "transform", "translate(35,10)" )
-        legend.call( that.legend().palette( that.palette() ) );
-        legend = legend.node()
-        if ( legend ) {
-            var height = legend.getBBox().height;
-            y.range([ y.range()[ 0 ], y.range()[ 1 ] + height + 20 ])
-        }
-
-        // start drawing
-        var axis = el.selectAll( "g[data-line-axis='x']" )
-            .data( [ data ] )
-
-        axis.enter().append( "g" )
-            .attr( "data-line-axis", "x" )
-            .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
-
-        axis.call( xlabels( x, y ) )
-
-        var groups = el.selectAll( "g[data-line-groups]" )
-            .data( [ data ] );
-        groups.enter().append( "g" )
-            .attr( "data-line-groups", "" );
-        var groups = groups.selectAll( "g[data-line-group]" )
-            .data( color.identity );
-        groups.exit().remove();
-        groups.enter().append( "g" )
-        groups.attr( "data-line-group", function ( d ) {
-            return d.key;
-        })
-
-        var lines = groups.selectAll( "path[data-line]" )
-            .data( function ( d ) { return [ d ] } )
-        lines.exit().remove();
-        lines.enter().append( "path" )
-            .attr( "data-line", "" )
-            .attr( "fill", "none" )
-        lines
-            .attr( "d", function ( d ) { 
-                return line( d ) 
-            })
-            .attr( "stroke", function ( d ) {
-                return c( d.key );
-            });
-
-        var areas = groups.selectAll( "path[data-line-area]" )
-            .data( function ( d ) { return [ d ] } );
-        areas.exit().remove()
-        areas.enter().append( "path" )
-            .attr( "data-line-area", "" )
-            .attr( "stroke", "none" )
-        areas
-            .attr( "d", function ( d ) { 
-                return area( d ) 
-            })
-            .attr( "fill", function ( d ) {
-                return c( d.key );
-            })
-            .style( "opacity", that.stack() ? .4 : .1 );
-
-        var points = groups.selectAll( "circle[data-line-point]" )
-            .data( color.identity )
-        points.exit().remove()
-        points.enter().append( "circle" )
-            .attr( "data-line-point", "" )
-            .attr( "fill", function ( d ) {
-                var key = this.parentNode.getAttribute( "data-line-group" );
-                return c( key );
-            })
-
-        var xs = [];
-        xs.__map = {};
-        points
-            .transition()
-            .attr( "r", function ( d ) {
-                // only show the points that were included in the original 
-                // dataset, excluding the ones that were generated to draw the 
-                // chart
-                return d.obj ? 0 : 0;
-            })
-            .attr( "stroke-width", 60 )
-            .attr( "stroke", "transparent" )
-            .attr( "cx", function ( d ) { 
-                var dx = x( d.x );
-                if ( !xs.__map[ dx ] ) {
-                    xs.push( xs.__map[ dx ] = { x: dx, p: [] });
-                }
-                if ( d.obj ) {
-                    xs.__map[ dx ].p.push( this );
-                }
-                return dx;
-            })
-            .attr( "cy", function ( d ) {
-                return y( d.y0 + d.y );
-            })
-            .attr( "fill", function ( d ) {
-                var key = this.parentNode.getAttribute( "data-line-group" );
-                return c( key );
-            });
-
-        // attach the hoverpoints behavior
-        var hovergroup = el.selectAll( "g[data-line-hoverpoints]" )
-            .data( [ data ] )
-        hovergroup.enter().append( "g" )
-            .attr( "data-line-hoverpoints", "" )
-        hovergroup.call( hoverpoints );
+        data.leaves = function () { return leaves }
+        data.isTimeline = function () { return isTimeline }
+        return data;
     }
 
     function xlabels ( x, y ) {

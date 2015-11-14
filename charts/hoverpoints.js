@@ -27,13 +27,13 @@
         hoverpoints.tooltip = getset( options, "tooltip" );
         hoverpoints.data = getset( options, "data" );
         hoverpoints.draw = function ( selection ) {
-            var chart = this;
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }
 
             selection.each( function ( data ) { 
-                draw( chart, this ) 
+                var data = layout( hoverpoints, hoverpoints.data() || data );
+                draw( hoverpoints, this, data ); 
             })
             return this;
         }
@@ -41,7 +41,7 @@
         return hoverpoints;
     }
 
-    function draw( that, el ) {
+    function draw( that, el, data ) {
         el = d3.select( el );
         var svg = color.selectUp( el, "svg" );
 
@@ -56,37 +56,12 @@
 
         svg.__hoverpoints = that;
         that._el = el;
-
-        // read the data, either from the legend or the element
-        var data = that.data() || el.datum();
-
-        // transpose the data to be searchable by x-coordinate
-        var x = that.x(), y = that.y(), c = that.color();
-        var xdata = [], map = {};
-        data.forEach( function ( series ) {
-            series.forEach( function ( d ) {
-                var dx = x( d.x );
-                if ( !map[ dx ] ) {
-                    xdata.push( map[ dx ] = [] );
-                    map[ dx ].x = dx;
-                }
-                map[ dx ].push({ 
-                    x: dx, 
-                    y: y( d.y ), 
-                    c: c( series.key ), 
-                    point: d 
-                })
-            })
-        })
-
-        // save it for the mouse move event
-        that._xdata = xdata;
+        that._xdata = data;
     }
 
     function mouseMove ( ev ) {
         var rect = this.getBoundingClientRect()
         var that = this.__hoverpoints;
-        var xs = that._xs;
         var x = that.x();
         var y = that.y();
         var c = that.color();
@@ -180,7 +155,29 @@
             .attr( "fill", "transparent" )
             .attr( "r", distance )
             .call( tooltip );
+    }
 
+    function layout( that, data ) {
+        // transpose the data to be searchable by x-coordinate
+        var x = that.x(), y = that.y(), c = that.color();
+        var xdata = [], map = {};
+        data.forEach( function ( series ) {
+            series.forEach( function ( d ) {
+                var dx = x( d.x );
+                if ( !map[ dx ] ) {
+                    xdata.push( map[ dx ] = [] );
+                    map[ dx ].x = dx;
+                }
+                map[ dx ].push({ 
+                    x: dx, 
+                    y: y( d.y ), 
+                    c: c( series.key ), 
+                    point: d 
+                })
+            })
+        })
+
+        return xdata;
     }
 
 })();

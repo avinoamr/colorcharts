@@ -21,13 +21,13 @@
         legend.data = getset( options, "data" );
         legend.direction = getset( options, "direction" );
         legend.draw = function ( selection ) {
-            var chart = this;
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }
 
             selection.each( function ( data ) { 
-                draw( chart, this ) 
+                var data = layout( legend, legend.data() || data );
+                draw( legend, this, data ); 
             })
             return this;
         }
@@ -35,7 +35,19 @@
         return legend;
     }
 
-    function draw ( that, el ) {
+    function layout ( that, data ) {
+        var data = data.map( function ( d ) {
+            return { v: d[ that.value() ], c: d[ that.color() ], obj: d }
+        })
+
+        // deduplication
+        return d3.nest()
+            .key( function ( d ) { return d.c } )
+            .entries( data )
+            .map( function ( d ) { return d.values[ 0 ] } );
+    }
+
+    function draw ( that, el, data ) {
         el = d3.select( el );
 
         if ( el.attr( "data-color-chart" ) != "legend" ) {
@@ -43,21 +55,7 @@
                 .text( "" );
         }
 
-        // read the data, either from the legend or the element
-        var data = that.data() || el.datum();
-
-        // extract the values for each obj
         var radius = 6;
-        var data = data.map( function ( d ) {
-            return { v: d[ that.value() ], c: d[ that.color() ], obj: d }
-        })
-
-        // deduplication
-        data = d3.nest()
-            .key( function ( d ) { return d.c } )
-            .entries( data )
-            .map( function ( d ) { return d.values[ 0 ] } );
-
         var palette = that.palette();
         var allc = data.map( function ( d ) { return d.c } );
         var clin = d3.scale.linear()

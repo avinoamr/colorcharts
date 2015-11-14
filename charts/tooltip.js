@@ -22,20 +22,21 @@
             title: null,
             y: null,
             v: null,
+            data: null,
         }
 
         function tooltip ( el ) { return tooltip.draw( this ) }
         tooltip.title = getset( options, "title" );
         tooltip.content = getset( options, "content" );
-        tooltip.color = getset( options, "c" );
+        tooltip.data = getset( options, "data" );
         tooltip.draw = function ( selection ) {
-            var chart = this;
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }
 
             selection.each( function ( data ) { 
-                draw( chart, this ) 
+                var data = layout( tooltip, tooltip.data() || data );
+                draw( tooltip, this, data );  
             })
             return this;
         }
@@ -43,20 +44,22 @@
         return tooltip;
     }
 
-    function draw( that, el ) {
-        el = d3.select( el );
-
-        var d = el.datum();
+    function layout ( that, data ) {
         var title = that.title();
         if ( typeof title == "function" ) {
-            title = title( d )
+            title = title( data )
         }
 
         var content = that.content();
         if ( typeof content == "function" ) {
-            content = content( d );
+            content = content( data );
         }
 
+        return { title: title, content: content };
+    }
+
+    function draw( that, el, data ) {
+        el = d3.select( el );
         var node = el.node();
         if ( !node.__tooltip ) {
             node.__tooltip = new Opentip( node, "", {
@@ -66,8 +69,8 @@
         }
 
         var html = [
-            "<h3 style='margin: 0'>" + title + "</h3>",
-            content
+            "<h3 style='margin: 0'>" + data.title + "</h3>",
+            data.content
         ].join( "<br />" )
         node.__tooltip.setContent( html )
     }

@@ -29,13 +29,13 @@
         bar.data = getset( options, "data" );
         bar.legend = getset( options, "legend" );
         bar.draw = function ( selection ) {
-            var chart = this;
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }
 
             selection.each( function ( data ) { 
-                draw( chart, this ) 
+                var data = layout( bar, bar.data() || data );
+                draw( bar, this, data ); 
             })
             return this;
         }
@@ -43,11 +43,7 @@
         return bar;
     }
 
-    function layout( that, data ) {
-
-    }
-
-    function draw( that, el ) {
+    function draw( that, el, data ) {
         el = d3.select( el );
 
         if ( el.attr( "data-color-chart" ) != "bar" ) {
@@ -57,74 +53,26 @@
 
         var height = that.height.get( el )
         var width = that.width.get( el )
-
-        // read the data, either from the legend or the element
-        var data = that.data() || el.datum();
-
-        // extract the values for each obj
-        data = data.map( function ( d ) {
-            var obj = {};
-            var x0 = d[ that.x0() ];
-            var x1 = d[ that.x1() ];
-            var c = d[ that.color() ];
-            var y = +d[ that.y() ];
-            if ( isNaN( y ) ) {
-                throw new Error( "y-dimension must be a number" );
-            }
-
-            return { x0: x0, x1: x1, c: c, y: y, y0: 0, obj: d }
-        })
-
-        // build the groups tree
-        data = d3.nest()
-            .key( function ( d ) { return d.x0 || "" } )
-            .key( function ( d ) { return d.x1 || "" } )
-            .key( function ( d ) { return d.c  || "" } )
-            .rollup( function ( data ) {
-                return data.reduce( function ( v, d ) {
-                    v.y += d.y;
-                    return v;
-                }, data[ 0 ] );
-            })
-            .entries( data )
-            .map( flatten );
-
-        // extract the colors and bars from the data tree
-        var bars = color.tree.dfs()
-            .filter( function ( d, i, j ) { return j == 2 } )
-            .entries( data );
-
-        var colors = color.tree.dfs()
-            .filter( function ( d, i, j ) { return j == 3 } )
-            .entries( data );
-
-        // stack the colors
-        bars.map( function ( data ) {
-            return data.map( function ( d ) { 
-                return [ d ] 
-            })
-        })
-        .forEach( d3.layout.stack() );
         
         // build the scales
-        var allx0 = data.map( function ( d ) { return d.key });
+        var allx0 = data.map( function ( d ) { return d.key } );
         var x0 = d3.scale.ordinal()
             .domain( allx0 )
             .rangeRoundBands([ 0, width ], .1 );
 
-        var allx1 = bars.map( function ( d ) { return d.key })
+        var allx1 = data.bars().map( function ( d ) { return d.key } )
         var x1 = d3.scale.ordinal()
             .domain( allx1 )
             .rangeRoundBands( [ 0, x0.rangeBand() ], .01 )
 
-        var ally = colors.map( function ( d ) { return d.y + d.y0 } );
+        var ally = data.colors().map( function ( d ) { return d.y + d.y0 } );
         var y = d3.scale.linear()
             .domain([ 0, d3.max( ally ) ])
             .rangeRound([ height, 0 ] );
 
         var c = color.palette()
             .colors( that.palette() )
-            .domain( colors.map( function ( d ) { return d.key } ) )
+            .domain( data.colors().map( function ( d ) { return d.key } ) )
             .scale();
 
         var tooltip = color.tooltip()
@@ -146,7 +94,7 @@
             && that.color() != that.x0()
             && that.color() != that.x1();
         var legend = el.selectAll( "g[data-bar-legend]" )
-            .data( legend ? [ colors ] : [] )
+            .data( legend ? [ data.colors() ] : [] )
         legend.exit().remove();
         legend.enter().append( "g" )
             .attr( "data-bar-legend", "" )
@@ -222,20 +170,51 @@
             })
     }
 
-    function mouseEnter ( svg ) {
-        return function () {
-            d3.select( this )
-                .transition()
-                .style( "opacity", .7 )
-        }
-    }
+    function layout( that, data ) {
+        // extract the values for each obj
+        data = data.map( function ( d ) {
+            var obj = {};
+            var x0 = d[ that.x0() ];
+            var x1 = d[ that.x1() ];
+            var c = d[ that.color() ];
+            var y = +d[ that.y() ];
+            if ( isNaN( y ) ) {
+                throw new Error( "y-dimension must be a number" );
+            }
 
-    function mouseLeave ( svg ) {
-        return function () {
-            d3.select( this )
-                .transition()
-                .style( "opacity", 1 )
-        }
+            return { x0: x0, x1: x1, c: c, y: y, y0: 0, obj: d }
+        })
+
+        data = d3.nest()
+            .key( function ( d ) { return d.x0 || "" } )
+            .key( function ( d ) { return d.x1 || "" } )
+            .key( function ( d ) { return d.c  || "" } )
+            .rollup( function ( data ) {
+                return data.reduce( function ( v, d ) {
+                    v.y += d.y;
+                    return v;
+                }, data[ 0 ] );
+            })
+            .entries( data )
+            .map( flatten );
+
+        var bars = color.tree.dfs()
+            .filter( function ( d, i, j ) { return j == 2 } )
+            .entries( data );
+
+        var colors = color.tree.dfs()
+            .filter( function ( d, i, j ) { return j == 3 } )
+            .entries( data );
+
+        // stack the colors in each bar
+        bars.map( function ( data ) {
+            return data.map( function ( d ) {  return [ d ] })
+        })
+        .forEach( d3.layout.stack() );
+
+        data.bars = function () { return bars }
+        data.colors = function () { return colors }
+        return data;
     }
 
     function xlabels ( x, y ) {

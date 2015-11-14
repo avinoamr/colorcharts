@@ -25,13 +25,13 @@
         pie.data = getset( options, "data" );
         pie.legend = getset( options, "legend" );
         pie.draw = function ( selection ) {
-            var chart = this;
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }
 
             selection.each( function ( data ) { 
-                draw( chart, this ) 
+                var data = layout( pie, pie.data() || data );
+                draw( pie, this, data ); 
             })
             return this;
         }
@@ -39,7 +39,7 @@
         return pie;
     }
 
-    function draw( that, el ) {
+    function draw( that, el, data ) {
         el = d3.select( el );
 
         if ( el.attr( "data-color-chart" ) != "pie" ) {
@@ -50,42 +50,6 @@
         var height = that.height.get( el )
         var width = that.width.get( el )
         var radius = Math.min( height / 2, width / 2 ) - 10;
-
-        // read the data, either from the legend or the element
-        var data = that.data() || el.datum();
-
-        // extract the values for each obj
-        data = data.map( function ( d ) {
-            var v = +d[ that.value() ]
-
-            if ( isNaN( v ) ) {
-                throw new Error( "pie value must be a number" );
-            }
-
-            return { v: v, c: d[ that.color() ], obj: d }
-        })
-
-        // group by colors
-        data = d3.nest()
-            .key( function ( d ) { return d.c  || "" } )
-            .rollup ( function ( data ) {
-                return data.reduce( function ( v, d ) {
-                    return v + d.v;
-                }, 0 )
-            })
-            .entries( data );
-
-        // lay out the pie
-        data = d3.layout.pie()
-            .sort( null )
-            .value( function ( d ) { 
-                return d.values
-            })( data )
-            .map( function ( d ) {
-                d.key = d.data.key;
-                delete d.data;
-                return d;
-            });
 
         var c = color.palette()
             .colors( that.palette() )
@@ -140,6 +104,43 @@
                 return c( d.key );
             })
             .call( tooltip );
+    }
+
+    function layout ( that, data ) {
+        // extract the values for each obj
+        data = data.map( function ( d ) {
+            var v = +d[ that.value() ]
+
+            if ( isNaN( v ) ) {
+                throw new Error( "pie value must be a number" );
+            }
+
+            return { v: v, c: d[ that.color() ], obj: d }
+        })
+
+        // group by colors
+        data = d3.nest()
+            .key( function ( d ) { return d.c  || "" } )
+            .rollup ( function ( data ) {
+                return data.reduce( function ( v, d ) {
+                    return v + d.v;
+                }, 0 )
+            })
+            .entries( data );
+
+        // lay out the pie
+        data = d3.layout.pie()
+            .sort( null )
+            .value( function ( d ) { 
+                return d.values
+            })( data )
+            .map( function ( d ) {
+                d.key = d.data.key;
+                delete d.data;
+                return d;
+            });
+
+        return data;
     }
 
 })();
