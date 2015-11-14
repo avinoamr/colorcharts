@@ -45,7 +45,7 @@
 
     function draw( that, el ) {
         el = d3.select( el );
-        
+
         if ( el.attr( "data-color-chart" ) != "bar" ) {
             el.attr( "data-color-chart", "bar" )
                 .text( "" );
@@ -53,20 +53,6 @@
 
         var height = that.height.get( el )
         var width = that.width.get( el )
-
-        function getter( key ) {
-            if ( typeof key == "function" ) {
-                return key;
-            } else {
-                return function ( d ) {
-                    return d[ key ];
-                }
-            }
-        }
-
-        var getx0 = getter( that.x0() );
-        var getx1 = getter( that.x1() );
-        var getc = getter( that.color() );
 
         // extract the values for each obj
         var data = that.data().map( function ( d ) {
