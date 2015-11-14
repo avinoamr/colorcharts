@@ -12,11 +12,8 @@
             radius: 8,
             distance: 40,
             tooltip: color.tooltip()
-                .content( function ( d ) {
-                    return d.point.y;
-                })
-                .title( function ( d ) {
-                    return d.point.x;
+                .title( function ( data ) {
+                    return data[ 0 ].point.x
                 })
         }
 
@@ -151,7 +148,9 @@
 
         // hover-area
         var hover = hoverpoints.selectAll( "circle[data-hoverpoints-hover" )
-            .data( function ( d ) { return [ d ] } );
+            .data( function ( d ) { 
+                return [ data[ ci ] ] 
+            });
         hover.exit()
             .remove()
         hover.enter().append( "circle" )

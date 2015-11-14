@@ -43,7 +43,7 @@
                 }).bind( this )
             }
 
-            el.each( function ( d ) {
+            el.each( function ( d, i ) {
                 if ( !this.__tooltip ) {
                     this.__tooltip = new Opentip( this, "", {
                         showOn: "mouseover",
@@ -53,7 +53,7 @@
 
                 var html = [
                     "<h3 style='margin: 0'>" + title( d ) + "</h3>",
-                    content( d )
+                    content( d, i )
                 ].join( "<br />" )
                 this.__tooltip.setContent( html )
             })

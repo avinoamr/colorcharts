@@ -173,8 +173,13 @@
             .y( y )
             .color( c )
         hoverpoints.tooltip()
-            .content( function ( d ) {
-                return ( d.point.c || that.y() ) + ": " + d.point.y;
+            .content( function ( data ) {
+                return data.filter( function ( d ) {
+                    return !!d.point.obj
+                })
+                .map( function ( d ) {
+                    return ( d.point.c || that.y() ) + ": " + d.point.y
+                }).join( "<br/>" );
             })
 
         var area = d3.svg.area()
