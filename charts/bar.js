@@ -151,7 +151,6 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-            // .style( "opacity", 1 );
 
         rects
             .call( tooltip )
@@ -231,32 +230,30 @@
             var maxh = 0;
             var labels = bars.selectAll( "text[data-bar-label='y']" )
                 .data( function ( d ) { return [ d ] } )
-
-            labels.enter().append( "text" )
-                .attr( "data-bar-label", "y" );
             labels.exit().remove();
+            labels.enter().append( "text" )
+                .attr( "data-bar-label", "y" )
+                .attr( "text-anchor", "middle" )
+                .attr( "alignment-baseline", "hanging" )
+                .style( "font", "16px roboto_condensedregular" )
+                .style( "opacity", .6 );
             labels
                 .text( function ( data ) { 
-                    var totaly = d3.max( data, function ( d ) {
+                    return d3.max( data, function ( d ) {
                         return d.y + d.y0;
                     })
-                    return totaly;
                 })
-                .attr( "height", 20 )
-                .attr( "width", 20 )
+                .call( color.truncate( w * 2 ) )
                 .attr( "y", function ( data ) {
                     return d3.min( data, function ( d ) {
                         return y( d.y + d.y0 );
                     }) - 20
                 })
-                .style( "font", "12px roboto_condensedregular" )
                 .style( "fill", function ( data ) {
                     return data.length == 1
                         ? c( data[ 0 ].key )
                         : "white";
                 })
-                .attr( "text-anchor", "middle" )
-                .attr( "alignment-baseline", "hanging" )
                 .attr( "transform", "translate(" + w + ",0)" )
         }
     }
@@ -279,6 +276,7 @@
                 .attr( "transform", function ( d ) {
                     return "translate(" + w + "," + ( y.range()[ 0 ] - 3 ) + ")"
                 })
+                .call( color.truncate( w * 2 ) )
 
             // side-effect: modify the y-range to leave space for the label
             var maxh = d3.max( labels, function ( text ) {
