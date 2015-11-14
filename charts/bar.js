@@ -236,6 +236,7 @@
                 .attr( "text-anchor", "middle" )
                 .attr( "alignment-baseline", "hanging" )
                 .style( "font", "16px roboto_condensedregular" )
+                .style( "fill", "rgba(255,255,255,.6)" )
                 .style( "opacity", .6 );
             labels
                 .text( function ( data ) { 
@@ -248,11 +249,6 @@
                     return d3.min( data, function ( d ) {
                         return y( d.y + d.y0 );
                     }) - 20
-                })
-                .style( "fill", function ( data ) {
-                    return data.length == 1
-                        ? c( data[ 0 ].key )
-                        : "white";
                 })
                 .attr( "transform", "translate(" + w + ",0)" )
         }
