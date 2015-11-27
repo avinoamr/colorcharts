@@ -99,6 +99,7 @@ body {
     background: url(../img/concrete_wall.png);
     color: #fffff8;
     font-family: "roboto_condensedregular", sans-serif;
+    fill: #fffff8;
 }
 
 #chart {
