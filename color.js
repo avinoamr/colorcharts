@@ -755,8 +755,7 @@
                 .text( d.v )
                 .attr( "y", radius )
                 .attr( "x", radius * 2 + 4 )
-                .attr( "alignment-baseline", "middle" )
-                .attr( "fill", "white" );
+                .attr( "alignment-baseline", "middle" );
 
             x += direction == HORIZONTAL 
                 ? label.node().offsetWidth + radius * 3 + 4
