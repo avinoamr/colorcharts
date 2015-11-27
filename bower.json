@@ -20,7 +20,7 @@
     "example",
     "test",
     "tests",
-    "build.sh",
+    "build.sh"
   ],
   "dependencies": {
     "d3": "~3.5.6"
