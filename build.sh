@@ -1,1 +1,1 @@
-cat lib/* charts/* > color.js
+cat lib/* charts/* > colorcharts.js
