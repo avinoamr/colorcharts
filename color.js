@@ -108,7 +108,7 @@
             } else {
 
                 // build a color-set from the range
-                if ( colors.from && colors.to ) {
+                if ( !Array.isArray( colors ) && colors.from && colors.to ) {
                     var interp = d3.interpolate( colors.from, colors.to );
                     colors = domain.map( function ( d, i ) {
                         return interp( i / domain.length )
