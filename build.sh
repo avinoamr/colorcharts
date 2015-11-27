@@ -1,0 +1,1 @@
+cat lib/* charts/* > color.js

@@ -19,7 +19,8 @@
     "bower_components",
     "example",
     "test",
-    "tests"
+    "tests",
+    "build.sh",
   ],
   "dependencies": {
     "d3": "~3.5.6"
