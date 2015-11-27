@@ -2,18 +2,21 @@
     var color = window.color;
     var getset = color.getset;
 
-    var colorDark = {
+    var Opentip = window.Opentip;
+    if ( !Opentip ) {
+        Opentip = function () {}
+        Opentip.prototype.setContent = function () {}
+        Opentip.styles = {};
+    }
+    
+    Opentip.styles.colorDark = {
         "extends": "dark",
         borderWidth: false,
         background: "rgba(0,0,0,.4)",
         shadowColor: "rgba(0, 0, 0, 0.15)",
         stemLength: 3,
         borderRadius: 15,
-    }
-
-    if ( window.Opentip ) {
-        window.Opentip.styles.colorDark = colorDark;
-    }
+    };
 
     color.tooltip = function () {
         var options = {
