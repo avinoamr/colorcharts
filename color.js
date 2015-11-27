@@ -1244,8 +1244,11 @@
             .data( legend ? [ data ] : [] );
         legend.enter().append( "g" )
             .attr( "data-pie-legend", "" )
-            .attr( "transform", "translate(35,10)" )
         legend.call( that.legend().palette( that.palette() ) );
+        legend.attr( "transform", function () {
+            var top = ( height - legend.node().getBBox().height ) / 2;
+            return "translate(35," + top + ")";
+        })
 
         // start drawing
         var pies = el.selectAll( "g[data-pie]" )
