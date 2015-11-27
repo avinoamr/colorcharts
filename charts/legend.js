@@ -56,17 +56,10 @@
         }
 
         var radius = 6;
-        var palette = that.palette();
-        var allc = data.map( function ( d ) { return d.c } );
-        var clin = d3.scale.linear()
-            .domain( d3.extent( allc ) )
-            .range( [ palette.from, palette.to ] );
-
-        var cord = d3.scale.ordinal()
-            .domain( allc )
-            .range( palette )
-
-        var c = palette.from && palette.to ? clin : cord;
+        var c = color.palette()
+            .colors( that.palette() )
+            .domain( data.map( function ( d ) { return d.c } ) )
+            .scale();
 
         // start drawing
         var groups = el.selectAll( "g[data-legend-group]" )
