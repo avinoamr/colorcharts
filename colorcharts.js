@@ -223,6 +223,7 @@
             el.attr( "data-color-chart", "bar" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         var height = that.height.get( el )
         var width = that.width.get( el )
@@ -523,6 +524,7 @@
             el.attr( "data-color-chart", "hoverpoints" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         if ( !svg.__hoverpoints ) {
             svg.addEventListener( "mousemove", mouseMove );
@@ -711,6 +713,7 @@
             el.attr( "data-color-chart", "legend" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         var radius = 6;
         var c = color.palette()
@@ -819,6 +822,7 @@
             el.attr( "data-color-chart", "line" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         var height = that.height.get( el )
         var width = that.width.get( el )
@@ -1211,6 +1215,7 @@
             el.attr( "data-color-chart", "pie" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         var height = that.height.get( el )
         var width = that.width.get( el )
@@ -1385,6 +1390,7 @@
                 removeElementsOnHide: true
             })
         }
+        el.node().__colorchart = that;
 
         var html = [
             "<h3 style='margin: 0'>" + data.title + "</h3>",

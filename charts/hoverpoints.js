@@ -49,6 +49,7 @@
             el.attr( "data-color-chart", "hoverpoints" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         if ( !svg.__hoverpoints ) {
             svg.addEventListener( "mousemove", mouseMove );

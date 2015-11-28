@@ -46,6 +46,7 @@
             el.attr( "data-color-chart", "pie" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         var height = that.height.get( el )
         var width = that.width.get( el )

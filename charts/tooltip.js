@@ -70,6 +70,7 @@
                 removeElementsOnHide: true
             })
         }
+        el.node().__colorchart = that;
 
         var html = [
             "<h3 style='margin: 0'>" + data.title + "</h3>",

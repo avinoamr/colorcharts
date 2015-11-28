@@ -54,6 +54,7 @@
             el.attr( "data-color-chart", "legend" )
                 .text( "" );
         }
+        el.node().__colorchart = that;
 
         var radius = 6;
         var c = color.palette()
