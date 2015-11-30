@@ -1,5 +1,10 @@
 window.onload = function () {
     setTimeout( drawLine );
+    var PALETTES = Object.keys( window.color.palettes )
+        .reduce( function ( palettes, key ) {
+            palettes[ key.substr( 0, 1 ).toUpperCase() + key.substr( 1 ) ] = key;
+            return palettes
+        }, {} );
 
     if ( window.Opentip ) {
         window.Opentip.defaultStyle = "colorDark";
@@ -100,7 +105,7 @@ window.onload = function () {
         gui.add( gui.obj, "y", { Count: "count", Number: "number" } )
         gui.add( gui.obj, "stack", { Yes: true, No: "" } )
         gui.add( gui.obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
-        gui.add( gui.obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
+        gui.add( gui.obj, "palette", PALETTES )
 
         generateCode();
     }
@@ -120,7 +125,7 @@ window.onload = function () {
         gui.add( gui.obj, "x1", { None: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
         gui.add( gui.obj, "y", { Count: "count", Number: "number" } )
         gui.add( gui.obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio", Count: "count", Number: "number" } )
-        gui.add( gui.obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
+        gui.add( gui.obj, "palette", PALETTES )
 
         generateCode()
     }
@@ -138,7 +143,7 @@ window.onload = function () {
 
         gui.add( gui.obj, "value", { Count: "count", Number: "number" } )
         gui.add( gui.obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
-        gui.add( gui.obj, "palette", { Default: "default", Paired: "paired", Greens: "greens" } )
+        gui.add( gui.obj, "palette", PALETTES )
 
         generateCode()
     }
