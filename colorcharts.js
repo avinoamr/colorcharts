@@ -446,8 +446,6 @@
             labels.exit().remove();
             labels
                 .text( function ( d ) { return d.key })
-                // .style( "font", "12px roboto_condensedregular" )
-                .style( "fill", "white" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", function ( d ) {
                     return "translate(" + w + "," + ( y.range()[ 0 ] - 3 ) + ")"
@@ -1096,8 +1094,6 @@
                         tick.select( "line" )
                             .attr( "stroke", "rgba(255,255,255,.1)" )
                         var text = tick.select( "text" )
-                            .attr( "fill", "rgba(255,255,255,.5)" )
-
                         maxw = Math.max( maxw, text.node().offsetWidth );
                     });
             
@@ -1125,10 +1121,7 @@
                 .selectAll( "g.tick" )
                     .each( function () {
                         var tick = d3.select( this );
-                        // tick.select( "line" ).attr( "stroke", "white" )
                         var text = tick.select( "text" )
-                            .attr( "fill", "white" )
-
                         maxh = Math.max( maxh, text.node().offsetHeight );
                     });
 

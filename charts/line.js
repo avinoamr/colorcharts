@@ -317,8 +317,6 @@
                         tick.select( "line" )
                             .attr( "stroke", "rgba(255,255,255,.1)" )
                         var text = tick.select( "text" )
-                            .attr( "fill", "rgba(255,255,255,.5)" )
-
                         maxw = Math.max( maxw, text.node().offsetWidth );
                     });
             
@@ -346,10 +344,7 @@
                 .selectAll( "g.tick" )
                     .each( function () {
                         var tick = d3.select( this );
-                        // tick.select( "line" ).attr( "stroke", "white" )
                         var text = tick.select( "text" )
-                            .attr( "fill", "white" )
-
                         maxh = Math.max( maxh, text.node().offsetHeight );
                     });
 

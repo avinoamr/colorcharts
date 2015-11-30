@@ -267,8 +267,6 @@
             labels.exit().remove();
             labels
                 .text( function ( d ) { return d.key })
-                // .style( "font", "12px roboto_condensedregular" )
-                .style( "fill", "white" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", function ( d ) {
                     return "translate(" + w + "," + ( y.range()[ 0 ] - 3 ) + ")"
