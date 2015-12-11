@@ -11,7 +11,8 @@
             color: null,
             palette: window.color.palettes.default,
             data: null,
-            direction: HORIZONTAL
+            direction: HORIZONTAL,
+            enabled: true
         }
 
         function legend ( el ) { return legend.draw( this ) }
@@ -20,7 +21,12 @@
         legend.palette = getset( options, "palette" );
         legend.data = getset( options, "data" );
         legend.direction = getset( options, "direction" );
+        legend.enabled = getset( options, "enabled" );
         legend.draw = function ( selection ) {
+            if ( !this.enabled() ) {
+                return
+            }
+            
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }
