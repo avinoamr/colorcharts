@@ -100,6 +100,11 @@
         palette.domain = getset( options, "domain" );
         palette.scale = function () {
             var colors = options.colors;
+
+            if ( typeof colors == "string" ) {
+                colors = color.palettes[ colors ];
+            }
+
             var domain = options.domain;
 
             // linear
