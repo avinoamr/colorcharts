@@ -1188,6 +1188,7 @@
             width: color.available( "width" ),
             value: null,
             color: null,
+            hole: 0,
             palette: window.color.palettes.default,
             data: null,
             legend: color.legend()
@@ -1201,6 +1202,7 @@
         pie.width = getset( options, "width" );
         pie.value = getset( options, "value" );
         pie.color = getset( options, "color" );
+        pie.hole = getset( options, "hole" );
         pie.palette = getset( options, "palette" );
         pie.data = getset( options, "data" );
         pie.legend = getset( options, "legend" );
@@ -1239,7 +1241,7 @@
 
         var arc = d3.svg.arc()
             .outerRadius( radius )
-            .innerRadius( 0 );
+            .innerRadius( radius * that.hole() );
 
         // tooltip
         var tooltip = color.tooltip()

@@ -54,6 +54,9 @@ window.onload = function () {
         set value ( v ) { chart.value( v ).draw( el ); generateCode() },
         get value () { return chart.value() },
 
+        set hole ( v ) { chart.hole( v ).draw( el ); generateCode() },
+        get hole () { return chart.hole() },
+
         set x ( v ) { chart.x( v ).draw( el ); generateCode() },
         get x () { return chart.x() },
 
@@ -143,6 +146,7 @@ window.onload = function () {
 
         gui.add( gui.obj, "value", { Count: "count", Number: "number" } )
         gui.add( gui.obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
+        gui.add( gui.obj, "hole", 0, .9 )
         gui.add( gui.obj, "palette", PALETTES )
 
         generateCode()
