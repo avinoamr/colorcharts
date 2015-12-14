@@ -80,6 +80,12 @@
         "paired": [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99", "#b15928" ],
         "pastel": [ "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6", "#ffffcc", "#e5d8bd", "#fddaec", "#f2f2f2" ],
 
+        // warn, cool and neon
+        // https://medium.com/graphiq-engineering/finding-the-right-color-palettes-for-data-visualizations-fcd4e707a283#.cbgjbosbs
+        "cool": [ "#DCECC9", "#B3DDCC", "#8ACDCE", "#62BED2", "#46AACE", "#3D91BE", "#3577AE", "#2D5E9E", "#24448E", "#1C2B7F", "#162065", "#11174B" ],
+        "warm": [ "#FDED86", "#FDE86E", "#F9D063", "#F5B857", "#F0A04B", "#EB8A40", "#E77235", "#E35B2C", "#C74E29", "#9D4429", "#753C2C", "#4C3430" ],
+        "neon": [ "#F9CDAC", "#F3ACA2", "#EE8B97", "#E96A8D", "#DB5087", "#B8428C", "#973490", "#742796", "#5E1F88", "#4D1A70", "#3D1459", "#2D0F41" ],
+
         // ranges
         "greyscale": { from: "#424242", to: "#BDBDBD" },
         "reds": { from: "#fcbba1", to: "#67000d" },
