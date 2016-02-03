@@ -15,7 +15,9 @@
             legend: color.legend()
                 .value( "key" )
                 .color( "key" ),
-            xaxis: color.xaxis()
+            xaxis: color.xaxis(),
+            yaxis: color.yaxis()
+                .inplace( true )
         }
 
         function bar () { return bar.draw( this ) }
@@ -29,6 +31,7 @@
         bar.palette = getset( options, "palette" );
         bar.legend = getset( options, "legend" );
         bar.xaxis = getset( options, "xaxis" );
+        bar.yaxis = getset( options, "yaxis" );
         bar.data = getset( options, "data" );
         bar.draw = function ( selection ) {
             if ( selection instanceof Element ) {
@@ -137,12 +140,20 @@
                 return d.key;
             });
 
-        bars
-            .call( ylabels( x1, y, c ) )
-            .transition()
-            .attr( "transform", function ( d ) {
-                return "translate(" + x1( d.key ) + ",0)";
-            });
+        // draw the y-axis
+        var axis = el.selectAll( "g[data-line-axis='y']" )
+            .data( [ data ] )
+        axis.enter().append( "g" )
+            .attr( "data-line-axis", "y" )
+            // .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
+        axis.call( that.yaxis().x( x0 ).y( y ) );
+
+        // bars
+        //     .call( ylabels( x1, y, c ) )
+        //     .transition()
+        //     .attr( "transform", function ( d ) {
+        //         return "translate(" + x1( d.key ) + ",0)";
+        //     });
 
         var rects = bars.selectAll( "rect[data-bar-color]" )
             .data( color.identity );
@@ -221,73 +232,6 @@
         data.colors = function () { return colors }
         return data;
     }
-
-    function ylabels ( x, y, c ) {
-        var w = x.rangeBand() / 2;
-        return function ( bars ) {
-            y.range([
-                y.range()[ 0 ],
-                y.range()[ 1 ] + 20,
-            ])
-
-            var maxh = 0;
-            var labels = bars.selectAll( "text[data-bar-label='y']" )
-                .data( function ( d ) { return [ d ] } )
-            labels.exit().remove();
-            labels.enter().append( "text" )
-                .attr( "data-bar-label", "y" )
-                .attr( "text-anchor", "middle" )
-                .attr( "alignment-baseline", "hanging" )
-                .style( "font", "16px roboto_condensedregular" )
-                .style( "fill", "rgba(255,255,255,.6)" )
-                .style( "opacity", .6 );
-            labels
-                .text( function ( data ) { 
-                    return d3.max( data, function ( d ) {
-                        return d.y + d.y0;
-                    })
-                })
-                .call( color.truncate( w * 2 ) )
-                .attr( "y", function ( data ) {
-                    return d3.min( data, function ( d ) {
-                        return y( d.y + d.y0 );
-                    }) - 20
-                })
-                .attr( "transform", "translate(" + w + ",0)" )
-        }
-    }
-
-    function xlabels ( x, y ) {
-        var h = y.range()[ 1 ] - y.range()[ 0 ];
-        var w = x.rangeBand() / 2;
-        return function ( groups ) {
-            var labels = groups.selectAll( "text[data-bar-label='x']" )
-                .data( function ( d ) { return [ d ] } )
-
-            labels.enter().append( "text" )
-                .attr( "data-bar-label", "x" );
-            labels.exit().remove();
-            labels
-                .text( function ( d ) { return d.key })
-                .attr( "text-anchor", "middle" )
-                .attr( "transform", function ( d ) {
-                    return "translate(" + w + "," + ( y.range()[ 0 ] - 3 ) + ")"
-                })
-                .call( color.truncate( w * 2 ) )
-
-            // side-effect: modify the y-range to leave space for the label
-            var maxh = d3.max( labels, function ( text ) {
-                return text[ 0 ].offsetHeight;
-            })
-
-            maxh += maxh ? 4 : 0;
-            y.rangeRound([ 
-                y.range()[ 0 ] - maxh, 
-                y.range()[ 1 ] 
-            ])
-        }
-    }
-
 
     function flatten ( d ) {
         if ( !d.values ) return d;

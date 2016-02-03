@@ -205,7 +205,10 @@
             data: null,
             legend: color.legend()
                 .value( "key" )
-                .color( "key" )
+                .color( "key" ),
+            xaxis: color.xaxis(),
+            yaxis: color.yaxis()
+                .inplace( true )
         }
 
         function bar () { return bar.draw( this ) }
@@ -217,8 +220,10 @@
         bar.y = getset( options, "y" );
         bar.color = getset( options, "color" );
         bar.palette = getset( options, "palette" );
-        bar.data = getset( options, "data" );
         bar.legend = getset( options, "legend" );
+        bar.xaxis = getset( options, "xaxis" );
+        bar.yaxis = getset( options, "yaxis" );
+        bar.data = getset( options, "data" );
         bar.draw = function ( selection ) {
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
@@ -281,10 +286,9 @@
 
         // draw the legend
         // only if there's more than 1 color, and we don't show the labels on
-        // the group (x0) and bar (x1)
+        // the group (x0)
         var legend = c.domain().length > 1
-            && that.color() != that.x0()
-            && that.color() != that.x1();
+            && that.color() != that.x0();
         var legend = el.selectAll( "g[data-bar-legend]" )
             .data( legend ? [ data.colors() ] : [] )
         legend.exit().remove();
@@ -308,15 +312,17 @@
             })
             .attr( "transform", function ( d ) {
                 return "translate(" + x0( d.key ) + ",0)";
-            })
+            });
 
-        groups
-            .call( xlabels( x0, y ) )
-            .transition()
-            .attr( "transform", function ( d ) {
-                return "translate(" + x0( d.key ) + ",0)";
-            })
+        // draw the x0-axis
+        var axis = el.selectAll( "g[data-line-axis='x']" )
+            .data( [ data ] )
+        axis.enter().append( "g" )
+            .attr( "data-line-axis", "x" )
+            .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
+        axis.call( that.xaxis().x( x0 ).y( y ) );
 
+        // draw the bars
         var bars = groups.selectAll( "g[data-bar]" )
             .data( color.identity );
         bars.exit().remove();
@@ -325,13 +331,20 @@
                 return d.key;
             });
 
-        bars
-            .call( xlabels( x1, y ) )
-            .call( ylabels( x1, y, c ) )
-            .transition()
-            .attr( "transform", function ( d ) {
-                return "translate(" + x1( d.key ) + ",0)";
-            });
+        // draw the y-axis
+        var axis = el.selectAll( "g[data-line-axis='y']" )
+            .data( [ data ] )
+        axis.enter().append( "g" )
+            .attr( "data-line-axis", "y" )
+            // .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
+        axis.call( that.yaxis().x( x0 ).y( y ) );
+
+        // bars
+        //     .call( ylabels( x1, y, c ) )
+        //     .transition()
+        //     .attr( "transform", function ( d ) {
+        //         return "translate(" + x1( d.key ) + ",0)";
+        //     });
 
         var rects = bars.selectAll( "rect[data-bar-color]" )
             .data( color.identity );
@@ -410,73 +423,6 @@
         data.colors = function () { return colors }
         return data;
     }
-
-    function ylabels ( x, y, c ) {
-        var w = x.rangeBand() / 2;
-        return function ( bars ) {
-            y.range([
-                y.range()[ 0 ],
-                y.range()[ 1 ] + 20,
-            ])
-
-            var maxh = 0;
-            var labels = bars.selectAll( "text[data-bar-label='y']" )
-                .data( function ( d ) { return [ d ] } )
-            labels.exit().remove();
-            labels.enter().append( "text" )
-                .attr( "data-bar-label", "y" )
-                .attr( "text-anchor", "middle" )
-                .attr( "alignment-baseline", "hanging" )
-                .style( "font", "16px roboto_condensedregular" )
-                .style( "fill", "rgba(255,255,255,.6)" )
-                .style( "opacity", .6 );
-            labels
-                .text( function ( data ) { 
-                    return d3.max( data, function ( d ) {
-                        return d.y + d.y0;
-                    })
-                })
-                .call( color.truncate( w * 2 ) )
-                .attr( "y", function ( data ) {
-                    return d3.min( data, function ( d ) {
-                        return y( d.y + d.y0 );
-                    }) - 20
-                })
-                .attr( "transform", "translate(" + w + ",0)" )
-        }
-    }
-
-    function xlabels ( x, y ) {
-        var h = y.range()[ 1 ] - y.range()[ 0 ];
-        var w = x.rangeBand() / 2;
-        return function ( groups ) {
-            var labels = groups.selectAll( "text[data-bar-label='x']" )
-                .data( function ( d ) { return [ d ] } )
-
-            labels.enter().append( "text" )
-                .attr( "data-bar-label", "x" );
-            labels.exit().remove();
-            labels
-                .text( function ( d ) { return d.key })
-                .attr( "text-anchor", "middle" )
-                .attr( "transform", function ( d ) {
-                    return "translate(" + w + "," + ( y.range()[ 0 ] - 3 ) + ")"
-                })
-                .call( color.truncate( w * 2 ) )
-
-            // side-effect: modify the y-range to leave space for the label
-            var maxh = d3.max( labels, function ( text ) {
-                return text[ 0 ].offsetHeight;
-            })
-
-            maxh += maxh ? 4 : 0;
-            y.rangeRound([ 
-                y.range()[ 0 ] - maxh, 
-                y.range()[ 1 ] 
-            ])
-        }
-    }
-
 
     function flatten ( d ) {
         if ( !d.values ) return d;
@@ -809,7 +755,9 @@
             data: null,
             legend: color.legend()
                 .value( "key" )
-                .color( "key" )
+                .color( "key" ),
+            xaxis: color.xaxis(),
+            yaxis: color.yaxis()
         }
 
         function line ( el ) { return line.draw( this ) }
@@ -822,6 +770,8 @@
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
         line.legend = getset( options, "legend" );
+        line.xaxis = getset( options, "xaxis" );
+        line.yaxis = getset( options, "yaxis" );
         line.draw = function ( selection ) {
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
@@ -914,14 +864,13 @@
         axis.enter().append( "g" )
             .attr( "data-line-axis", "x" )
             .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
-        axis.call( xlabels( x, y ) )
+        axis.call( that.xaxis().x( x ).y( y ) ); //xlabels( x, y ) )
 
         var axis = el.selectAll( "g[data-line-axis='y']" )
             .data( [ data ] )
         axis.enter().append( "g" )
             .attr( "data-line-axis", "y" )
-        axis.call( ylabels( x, y ) )
-
+        axis.call( that.yaxis().x( x ).y( y ) )
 
         // start drawing
         var groups = el.selectAll( "g[data-line-groups]" )
@@ -1087,68 +1036,6 @@
         data.leaves = function () { return leaves }
         data.isTimeline = function () { return isTimeline }
         return data;
-    }
-
-    function ylabels ( x, y ) {
-        var width = x.range()[ 1 ] - x.range()[ 0 ];
-        var yAxis = d3.svg.axis()
-            .scale( y )
-            .orient( "left" )
-            .tickSize( width, 0 )
-            .ticks( 3 )
-
-        return function () {
-            var maxw = 0;
-            this
-                .call( yAxis )
-                .each( function () {
-                    d3.select( this )
-                        .selectAll( "path.domain" )
-                        .attr( "fill", "white" );
-                })
-                .selectAll( "g.tick" )
-                    .each( function () {
-                        var tick = d3.select( this );
-                        tick.select( "line" )
-                            .attr( "stroke", "rgba(255,255,255,.1)" )
-                        var text = tick.select( "text" )
-                        maxw = Math.max( maxw, text.node().offsetWidth );
-                    });
-            
-            maxw = maxw ? maxw + 8 : 0; 
-            this.attr( "transform", "translate(" + ( width + maxw ) + ",0)" );
-
-        }
-    }
-
-    function xlabels ( x, y ) {
-        var xAxis = d3.svg.axis()
-            .scale( x )
-            .orient( "bottom" )
-            .tickSize( 10, 0 )
-            .ticks( 7 );
-
-        return function () {
-            var maxh = 0;
-            this.call( xAxis )
-                .each( function () {
-                    d3.select( this )
-                        .selectAll( "path.domain" )
-                        .attr( "fill", "white" );
-                })
-                .selectAll( "g.tick" )
-                    .each( function () {
-                        var tick = d3.select( this );
-                        var text = tick.select( "text" )
-                        maxh = Math.max( maxh, text.node().offsetHeight );
-                    });
-
-            maxh = maxh ? maxh + 8 : 0; 
-            y.range([ 
-                y.range()[ 0 ] - maxh, 
-                y.range()[ 1 ] 
-            ])
-        }
     }
 
     function interp ( d ) {
@@ -1417,5 +1304,217 @@
         ].join( "<br />" )
         node.__tooltip.setContent( html )
     }
+
+})();
+(function () {
+    var color = window.color;
+    var getset = color.getset;
+
+    color.xaxis = function () {
+        var options = {
+            enabled: true,
+            x: null,
+            y: null,
+            data: null
+        };
+        
+        function xaxis () { 
+            return xaxis.draw( this ) 
+        }
+
+        xaxis.enabled = getset( options, "enabled" );
+        xaxis.x = getset( options, "x" );
+        xaxis.y = getset( options, "y" );
+        xaxis.data = getset( options, "data" );
+        xaxis.draw = function ( selection ) {
+            if ( !this.enabled() ) {
+                return
+            }
+            
+            if ( selection instanceof Element ) {
+                selection = d3.selectAll( [ selection ] );
+            }
+
+            selection.each( function ( data ) { 
+                var data = layout( xaxis, xaxis.data() || data );
+                draw( xaxis, this, data );  
+            })
+            return this;
+        }
+
+        return xaxis;
+    }
+
+    function layout ( that, data ) {
+        return data;
+    }
+
+    function draw ( that, el, data ) {
+        var x = that.x();
+        var y = that.y();
+        var xAxis = d3.svg.axis()
+            .scale( x )
+            .orient( "bottom" )
+            .tickSize( 10, 0 )
+            .ticks( 7 );
+
+        var maxh = 0;
+        el = d3.select( el );
+        el.call( xAxis )
+            .each( function () {
+                d3.select( this )
+                    .selectAll( "path.domain" )
+                    .attr( "fill", "white" );
+            })
+            .selectAll( "g.tick" )
+                .each( function () {
+                    var tick = d3.select( this );
+                    var text = tick.select( "text" )
+                    maxh = Math.max( maxh, text.node().offsetHeight );
+                });
+
+        maxh = maxh ? maxh + 8 : 0; 
+        y.range([ 
+            y.range()[ 0 ] - maxh, 
+            y.range()[ 1 ] 
+        ])
+    }
+
+
+})();(function () {
+    var color = window.color;
+    var getset = color.getset;
+
+    color.yaxis = function () {
+        var options = {
+            inplace: false,
+            enabled: true,
+            x: null,
+            y: null,
+            data: null,
+        };
+
+        function yaxis () {
+            return yaxis.draw( this );
+        }
+
+        yaxis.enabled = getset( options, "enabled" );
+        yaxis.inplace = getset( options, "inplace" );
+        yaxis.x = getset( options, "x" );
+        yaxis.y = getset( options, "y" );
+        yaxis.data = getset( options, "data" );
+        yaxis.draw = function ( selection ) {
+            if ( !this.enabled() ) {
+                return
+            }
+            
+            if ( selection instanceof Element ) {
+                selection = d3.selectAll( [ selection ] );
+            }
+
+            selection.each( function ( data ) { 
+                var data = layout( yaxis, yaxis.data() || data );
+                draw( yaxis, this, data );  
+            })
+            return this;
+        }
+
+        return yaxis;
+    }
+
+    function layout ( that, data ) {
+        return data;
+    }
+
+    function draw ( that, el, data ) {
+        return that.inplace() 
+            ? drawInPlace( that, el, data )
+            : drawAxis( that, el, data );
+    }
+
+    function drawInPlace ( that, el, data ) {
+        var x = that.x();
+        var y = that.y();
+
+        data = flatten( data )
+            .filter( function ( d ) {
+                return Boolean( d.obj )
+            });
+
+        el = d3.select( el );
+        var labels = el.selectAll( 'text[data-yaxis-label]' )
+            .data( data )
+        labels.exit().remove();
+        labels.enter().append( "text" )
+            .attr( 'data-yaxis-label', '' )
+            .attr( "text-anchor", "middle" )
+            .attr( "alignment-baseline", "hanging" )
+            .style( "opacity", .6 );
+
+        labels
+            .text( function ( d ) {
+                return d.y;
+            })
+            .attr( "transform", function ( d ) {
+                var xv = x( d.x || d.x0 );
+                var yv = y( d.y ) - 20;
+
+                if ( x.rangeBand ) {
+                    xv += x.rangeBand() / 2;
+                }
+
+                return "translate(" + xv + ',' + yv + ')';
+            })
+
+    }
+
+    function drawAxis ( that, el, data ) {
+        var x = that.x();
+        var y = that.y();
+
+        var width = x.range().slice( -1 )[ 0 ] - x.range()[ 0 ];
+        if ( x.rangeBand ) {
+            // handle range bands where the computed width is not including
+            // the extra band width at the end.
+            width += x.rangeBand();
+        }
+
+        var yAxis = d3.svg.axis()
+            .scale( y )
+            .orient( "left" )
+            .tickSize( width, 0 )
+            .ticks( 3 );
+
+        var maxw = 0;
+        el = d3.select( el );
+        el.call( yAxis )
+            .each( function ( d ) {
+                d3.select( this )
+                    .selectAll( "path.domain" )
+                    .attr( "fill", "white" );
+            })
+            .selectAll( "g.tick" )
+                .each( function () {
+                    var tick = d3.select( this );
+                    tick.select( "line" )
+                        .attr( "stroke", "rgba(255,255,255,.1)" )
+                    var text = tick.select( "text" )
+                    maxw = Math.max( maxw, text.node().offsetWidth );
+                });
+        
+        maxw = maxw ? maxw + 8 : 0; 
+        el.attr( "transform", "translate(" + ( width + maxw ) + ",0)" );
+    }
+
+    function flatten ( data ) {
+        if ( !Array.isArray( data ) ) {
+            return data;
+        }
+
+        return data.reduce( function ( data, d ) {
+            return data.concat( flatten( d ) );
+        }, [] )
+    }
+
 
 })();

@@ -4,6 +4,7 @@
 
     color.xaxis = function () {
         var options = {
+            enabled: true,
             x: null,
             y: null,
             data: null
@@ -13,10 +14,15 @@
             return xaxis.draw( this ) 
         }
 
+        xaxis.enabled = getset( options, "enabled" );
         xaxis.x = getset( options, "x" );
         xaxis.y = getset( options, "y" );
         xaxis.data = getset( options, "data" );
         xaxis.draw = function ( selection ) {
+            if ( !this.enabled() ) {
+                return
+            }
+            
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
             }

@@ -15,7 +15,8 @@
             legend: color.legend()
                 .value( "key" )
                 .color( "key" ),
-            xaxis: color.xaxis()
+            xaxis: color.xaxis(),
+            yaxis: color.yaxis()
         }
 
         function line ( el ) { return line.draw( this ) }
@@ -29,6 +30,7 @@
         line.data = getset( options, "data" );
         line.legend = getset( options, "legend" );
         line.xaxis = getset( options, "xaxis" );
+        line.yaxis = getset( options, "yaxis" );
         line.draw = function ( selection ) {
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
@@ -127,8 +129,7 @@
             .data( [ data ] )
         axis.enter().append( "g" )
             .attr( "data-line-axis", "y" )
-        axis.call( ylabels( x, y ) )
-
+        axis.call( that.yaxis().x( x ).y( y ) )
 
         // start drawing
         var groups = el.selectAll( "g[data-line-groups]" )
@@ -295,68 +296,6 @@
         data.isTimeline = function () { return isTimeline }
         return data;
     }
-
-    function ylabels ( x, y ) {
-        var width = x.range()[ 1 ] - x.range()[ 0 ];
-        var yAxis = d3.svg.axis()
-            .scale( y )
-            .orient( "left" )
-            .tickSize( width, 0 )
-            .ticks( 3 )
-
-        return function () {
-            var maxw = 0;
-            this
-                .call( yAxis )
-                .each( function () {
-                    d3.select( this )
-                        .selectAll( "path.domain" )
-                        .attr( "fill", "white" );
-                })
-                .selectAll( "g.tick" )
-                    .each( function () {
-                        var tick = d3.select( this );
-                        tick.select( "line" )
-                            .attr( "stroke", "rgba(255,255,255,.1)" )
-                        var text = tick.select( "text" )
-                        maxw = Math.max( maxw, text.node().offsetWidth );
-                    });
-            
-            maxw = maxw ? maxw + 8 : 0; 
-            this.attr( "transform", "translate(" + ( width + maxw ) + ",0)" );
-
-        }
-    }
-
-    // function xlabels ( x, y ) {
-    //     var xAxis = d3.svg.axis()
-    //         .scale( x )
-    //         .orient( "bottom" )
-    //         .tickSize( 10, 0 )
-    //         .ticks( 7 );
-
-    //     return function () {
-    //         var maxh = 0;
-    //         this.call( xAxis )
-    //             .each( function () {
-    //                 d3.select( this )
-    //                     .selectAll( "path.domain" )
-    //                     .attr( "fill", "white" );
-    //             })
-    //             .selectAll( "g.tick" )
-    //                 .each( function () {
-    //                     var tick = d3.select( this );
-    //                     var text = tick.select( "text" )
-    //                     maxh = Math.max( maxh, text.node().offsetHeight );
-    //                 });
-
-    //         maxh = maxh ? maxh + 8 : 0; 
-    //         y.range([ 
-    //             y.range()[ 0 ] - maxh, 
-    //             y.range()[ 1 ] 
-    //         ])
-    //     }
-    // }
 
     function interp ( d ) {
         return function ( x ) {
