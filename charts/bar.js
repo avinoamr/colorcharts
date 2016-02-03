@@ -14,7 +14,8 @@
             data: null,
             legend: color.legend()
                 .value( "key" )
-                .color( "key" )
+                .color( "key" ),
+            xaxis: color.xaxis()
         }
 
         function bar () { return bar.draw( this ) }
@@ -26,8 +27,9 @@
         bar.y = getset( options, "y" );
         bar.color = getset( options, "color" );
         bar.palette = getset( options, "palette" );
-        bar.data = getset( options, "data" );
         bar.legend = getset( options, "legend" );
+        bar.xaxis = getset( options, "xaxis" );
+        bar.data = getset( options, "data" );
         bar.draw = function ( selection ) {
             if ( selection instanceof Element ) {
                 selection = d3.selectAll( [ selection ] );
@@ -90,10 +92,9 @@
 
         // draw the legend
         // only if there's more than 1 color, and we don't show the labels on
-        // the group (x0) and bar (x1)
+        // the group (x0)
         var legend = c.domain().length > 1
-            && that.color() != that.x0()
-            && that.color() != that.x1();
+            && that.color() != that.x0();
         var legend = el.selectAll( "g[data-bar-legend]" )
             .data( legend ? [ data.colors() ] : [] )
         legend.exit().remove();
@@ -117,15 +118,17 @@
             })
             .attr( "transform", function ( d ) {
                 return "translate(" + x0( d.key ) + ",0)";
-            })
+            });
 
-        groups
-            .call( xlabels( x0, y ) )
-            .transition()
-            .attr( "transform", function ( d ) {
-                return "translate(" + x0( d.key ) + ",0)";
-            })
+        // draw the x0-axis
+        var axis = el.selectAll( "g[data-line-axis='x']" )
+            .data( [ data ] )
+        axis.enter().append( "g" )
+            .attr( "data-line-axis", "x" )
+            .attr( "transform", "translate(0," + ( y.range()[ 0 ] - 30 ) + ")" );
+        axis.call( that.xaxis().x( x0 ).y( y ) );
 
+        // draw the bars
         var bars = groups.selectAll( "g[data-bar]" )
             .data( color.identity );
         bars.exit().remove();
@@ -135,7 +138,6 @@
             });
 
         bars
-            .call( xlabels( x1, y ) )
             .call( ylabels( x1, y, c ) )
             .transition()
             .attr( "transform", function ( d ) {
