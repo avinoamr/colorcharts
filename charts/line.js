@@ -11,6 +11,7 @@
             stack: false,
             color: null,
             palette: window.color.palettes.default,
+            baseline: null,
             data: null,
             legend: color.legend()
                 .value( "key" )
@@ -26,6 +27,7 @@
         line.y = getset( options, "y" );
         line.stack = getset( options, "stack" );
         line.color = getset( options, "color" );
+        line.baseline = getset( options, "baseline" );
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
         line.legend = getset( options, "legend" );
@@ -69,9 +71,11 @@
         var yExtent = d3.extent( data.leaves(), function ( d ) { 
             return d.y + d.y0 
         });
+
+        var isMin = that.baseline() === "minimum";
         var y = d3.scale.linear()
-            // .clamp( true )
-            .domain( [ 0, yExtent[ 1 ] ] )
+            .clamp( isMin )
+            .domain( [ isMin ? yExtent[ 0 ] : 0, yExtent[ 1 ] ] )
             .range( [ height, 8 ] );
 
         var c = color.palette()

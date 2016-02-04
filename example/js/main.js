@@ -72,6 +72,9 @@ window.onload = function () {
         set stack ( v ) { chart.stack( v ).draw( el ); generateCode() },
         get stack () { return chart.stack() || "" },
 
+        set baseline( v ) { chart.baseline( v ).draw( el ); generateCode(); },
+        get baseline() { return chart.baseline() || "" },
+
         set palette ( v ) {
             chart.palette( window.color.palettes[ v ] ).draw( el);
             generateCode()
@@ -107,6 +110,7 @@ window.onload = function () {
         gui.add( gui.obj, "x", { "Release Date": "release date", Count: "count", Number: "number" } )
         gui.add( gui.obj, "y", { Count: "count", Number: "number" } )
         gui.add( gui.obj, "stack", { Yes: true, No: "" } )
+        gui.add( gui.obj, "baseline", { Minimum: "minimum", Zero: "" } )
         gui.add( gui.obj, "color", { Auto: "", Movie: "movie", Genre: "genre", Studio: "studio" } )
         gui.add( gui.obj, "palette", PALETTES )
 
