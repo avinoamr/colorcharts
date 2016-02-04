@@ -223,6 +223,9 @@
                 // height segment to precede it
                 var minx = d3.min( data, function ( d ) { return d.x } );
                 if ( minx != xExtent[ 0 ] ) {
+                    minx = isTimeline
+                        ? new Date( minx.getTime() - 1000 )
+                        : minx - .1
                     data.unshift( 
                         { x: minx, y: 0, y0: 0 }, 
                         { x: xExtent[ 0 ], y: 0, y0: 0 }
@@ -233,6 +236,9 @@
                 // height segment to succeed it
                 var maxx = d3.max( data, function ( d ) { return d.x } );
                 if ( maxx != xExtent[ 1 ] ) {
+                    maxx = isTimeline
+                        ? new Date( maxx.getTime() + 1000 )
+                        : maxx + .1
                     data.push( 
                         { x: maxx, y: 0, y0: 0 }, 
                         { x: xExtent[ 1 ], y: 0, y0: 0 }
