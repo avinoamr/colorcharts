@@ -70,7 +70,8 @@
             return d.y + d.y0 
         });
         var y = d3.scale.linear()
-            .domain( [ 0, yExtent[ 1 ] ] )
+            .clamp( true )
+            .domain( [ 5, yExtent[ 1 ] ] )
             .range( [ height, 8 ] );
 
         var c = color.palette()
