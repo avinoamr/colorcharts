@@ -752,6 +752,7 @@
             stack: false,
             color: null,
             palette: window.color.palettes.default,
+            baseline: null,
             data: null,
             legend: color.legend()
                 .value( "key" )
@@ -767,6 +768,7 @@
         line.y = getset( options, "y" );
         line.stack = getset( options, "stack" );
         line.color = getset( options, "color" );
+        line.baseline = getset( options, "baseline" );
         line.palette = getset( options, "palette" );
         line.data = getset( options, "data" );
         line.legend = getset( options, "legend" );
@@ -810,8 +812,11 @@
         var yExtent = d3.extent( data.leaves(), function ( d ) { 
             return d.y + d.y0 
         });
+
+        var isMin = that.baseline() === "minimum";
         var y = d3.scale.linear()
-            .domain( [ 0, yExtent[ 1 ] ] )
+            .clamp( isMin )
+            .domain( [ isMin ? yExtent[ 0 ] : 0, yExtent[ 1 ] ] )
             .range( [ height, 8 ] );
 
         var c = color.palette()
@@ -886,7 +891,9 @@
         })
 
         var lines = groups.selectAll( "path[data-line]" )
-            .data( function ( d ) { return [ d ] } )
+            .data( function ( d ) { 
+                return that.stack() ? [] : [ d ];
+            })
         lines.exit().remove();
         lines.enter().append( "path" )
             .attr( "data-line", "" )
@@ -912,7 +919,7 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-            .style( "opacity", that.stack() ? .4 : .1 );
+            .style( "opacity", that.stack() ? 1 : .1 );
 
         // attach the hoverpoints behavior
         var hovergroup = el.selectAll( "g[data-line-hoverpoints]" )
@@ -964,6 +971,9 @@
                 // height segment to precede it
                 var minx = d3.min( data, function ( d ) { return d.x } );
                 if ( minx != xExtent[ 0 ] ) {
+                    minx = isTimeline
+                        ? new Date( minx.getTime() - 1000 )
+                        : minx - .1
                     data.unshift( 
                         { x: minx, y: 0, y0: 0 }, 
                         { x: xExtent[ 0 ], y: 0, y0: 0 }
@@ -974,6 +984,9 @@
                 // height segment to succeed it
                 var maxx = d3.max( data, function ( d ) { return d.x } );
                 if ( maxx != xExtent[ 1 ] ) {
+                    maxx = isTimeline
+                        ? new Date( maxx.getTime() + 1000 )
+                        : maxx + .1
                     data.push( 
                         { x: maxx, y: 0, y0: 0 }, 
                         { x: xExtent[ 1 ], y: 0, y0: 0 }
