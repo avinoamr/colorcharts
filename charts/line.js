@@ -146,7 +146,9 @@
         })
 
         var lines = groups.selectAll( "path[data-line]" )
-            .data( function ( d ) { return [ d ] } )
+            .data( function ( d ) { 
+                return that.stack() ? [] : [ d ];
+            })
         lines.exit().remove();
         lines.enter().append( "path" )
             .attr( "data-line", "" )
@@ -172,7 +174,7 @@
             .attr( "fill", function ( d ) {
                 return c( d.key );
             })
-            .style( "opacity", that.stack() ? .4 : .1 );
+            .style( "opacity", that.stack() ? 1 : .1 );
 
         // attach the hoverpoints behavior
         var hovergroup = el.selectAll( "g[data-line-hoverpoints]" )
