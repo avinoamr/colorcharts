@@ -79,7 +79,7 @@
             })
             .attr( "transform", function ( d ) {
                 var xv = x( d.x || d.x0 );
-                var yv = y( d.y ) - 20;
+                var yv = y( d.y + d.y0 ) - 20;
 
                 if ( x.rangeBand ) {
                     xv += x.rangeBand() / 2;
