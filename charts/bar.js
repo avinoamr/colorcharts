@@ -116,10 +116,11 @@
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
-            .attr( "data-bar-group", function ( d ) {
+        groups.attr( "data-bar-group", function ( d ) {
                 return d.key;
             })
             .attr( "transform", function ( d ) {
+                console.log( 'dk', d.key );
                 return "translate(" + x0( d.key ) + ",0)";
             });
 
