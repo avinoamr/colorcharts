@@ -120,7 +120,6 @@
                 return d.key;
             })
             .attr( "transform", function ( d ) {
-                console.log( 'dk', d.key );
                 return "translate(" + x0( d.key ) + ",0)";
             });
 
