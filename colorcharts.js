@@ -307,7 +307,7 @@
             .data( data );
         groups.exit().remove();
         groups.enter().append( "g" )
-            .attr( "data-bar-group", function ( d ) {
+        groups.attr( "data-bar-group", function ( d ) {
                 return d.key;
             })
             .attr( "transform", function ( d ) {
@@ -1449,6 +1449,12 @@
         var x = that.x();
         var y = that.y();
 
+        // leave enough space for the top-most label above the bars
+        y.range([
+            y.range()[ 0 ],
+            y.range()[ 1 ] + 20
+        ])
+
         data = flatten( data )
             .filter( function ( d ) {
                 return Boolean( d.obj )
@@ -1461,8 +1467,7 @@
         labels.enter().append( "text" )
             .attr( 'data-yaxis-label', '' )
             .attr( "text-anchor", "middle" )
-            .attr( "alignment-baseline", "hanging" )
-            .style( "opacity", .6 );
+            .attr( "alignment-baseline", "hanging" );
 
         labels
             .text( function ( d ) {
@@ -1470,7 +1475,7 @@
             })
             .attr( "transform", function ( d ) {
                 var xv = x( d.x || d.x0 );
-                var yv = y( d.y ) - 20;
+                var yv = y( d.y + d.y0 ) - 20;
 
                 if ( x.rangeBand ) {
                     xv += x.rangeBand() / 2;
