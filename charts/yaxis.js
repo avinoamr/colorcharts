@@ -53,6 +53,12 @@
         var x = that.x();
         var y = that.y();
 
+        // leave enough space for the top-most label above the bars
+        y.range([
+            y.range()[ 0 ],
+            y.range()[ 1 ] + 20
+        ])
+
         data = flatten( data )
             .filter( function ( d ) {
                 return Boolean( d.obj )
@@ -65,8 +71,7 @@
         labels.enter().append( "text" )
             .attr( 'data-yaxis-label', '' )
             .attr( "text-anchor", "middle" )
-            .attr( "alignment-baseline", "hanging" )
-            .style( "opacity", .6 );
+            .attr( "alignment-baseline", "hanging" );
 
         labels
             .text( function ( d ) {
